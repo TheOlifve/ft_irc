@@ -12,10 +12,12 @@ void	Server::cmdHelp(int	cfd) {
 }
 
 void	Server::cmdParsing(int cfd, std::vector<std::string> &tokens) {
-	if (!tokens[0].compare("HELP"))
+	if (!tokens[0].compare("/HELP"))
 		cmdHelp(cfd);
-	else if (!tokens[0].compare("JOIN"))
+	else if (!tokens[0].compare("/JOIN"))
 		cmdJoin(cfd, tokens);
+	else
+		send(cfd, "Unknown command.\n", 17, 0);
 }
 
 void	Server::clientInput(int i) {
@@ -24,26 +26,27 @@ void	Server::clientInput(int i) {
 	char						buff[1024];
 	std::vector<std::string>	tokens;
 
-	bytesRead = recv(cfd, buff, sizeof(buff) - 1, 0);
-	buff[bytesRead - 1] = '\0';
+	bytesRead = read(cfd, buff, sizeof(buff) - 1);
 	if (bytesRead > 1024) {
 		send(cfd, "ERROR: Out of buffer(1024).\n", 28, 0);
 		return;
+	} else if (bytesRead > 0) {
+		buff[bytesRead - 1] = '\0';
+		tokens = split(buff);
+		if (tokens.size() <= 0)
+			send(cfd, "ERROR: Too short.\n", 18, 0);
+		if (!_serverClients[cfd]->getAuthorized())
+			authorization(cfd, i, tokens[0]);
+		else if (!_serverClients[cfd]->getName())
+			addUsername(cfd, tokens[0]);
+		else
+			cmdParsing(cfd, tokens);
 	} else if (bytesRead == 0) {
-		std::cout << "Client [" << cfd << "] : disconnected (EOF on input)" << std::endl;
 		send(cfd, "EXIT: EOF on input.\n", 20, 0);
+		std::cout << "Client [" << cfd << "] : disconnected (EOF on input)" << std::endl;
 		removeClient(i);
 		return;
 	}
-	tokens = split(buff);
-	if (tokens.size() <= 0)
-		send(cfd, "ERROR: Too short.\n", 18, 0);
-	if (!_serverClients[cfd]->getAuthorized())
-		authorization(cfd, i, tokens[0]);
-	else if (!_serverClients[cfd]->getName())
-		addUsername(cfd, tokens[0]);
-	else
-		cmdParsing(cfd, tokens);
 	memset(buff, 0, 1024);
 }
 
@@ -74,6 +77,8 @@ void	Server::serverCmdParsing(const std::string &message) {
 
 	if (!tokens[0].compare("/CREATE"))
 		createChannel(tokens);
+	else
+		std::cout << "Unknown command." << std::endl;
 }
 
 void	Server::cmdJoin(const int &cfd, const std::vector<std::string> &tokens) {
@@ -87,9 +92,10 @@ void	Server::cmdJoin(const int &cfd, const std::vector<std::string> &tokens) {
 		send(cfd, "ERROR: A server with this name doesn't exist.\n", 46, 0);
 		return;
 	}
-
-	Channel	*channel = _serverChannels[tokens[1]];
-	channel->joinChannel(cfd, tokens);
+	if (_serverClients[cfd]->getChannel() != "\0") {
+		_serverChannels[_serverClients[cfd]->getChannel()]->removeClient(cfd);
+	}
+	_serverChannels[tokens[1]]->joinChannel(*_serverClients[cfd], tokens);
 }
 
 void	Server::serverInput(void) {
@@ -97,7 +103,7 @@ void	Server::serverInput(void) {
 	char		buff[1024];
 	std::string	message;
 
-	bytesRead = recv(STDIN_FILENO, buff, sizeof(buff) - 1, 0);
+	bytesRead = read(STDIN_FILENO, buff, sizeof(buff) - 1);
 	if (bytesRead > 0) {
 		buff[bytesRead - 1] = '\0';
 		message = buff;

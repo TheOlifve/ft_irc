@@ -8,14 +8,16 @@ class Client {
 		Client();
 		Client(int);
 		int			getUserFd(void) const;
+		std::string	getChannel(void) const;
 		std::string	getUsername(void) const;
 		std::string	getNickname(void) const;
 		bool		getOp(void) const;
 		bool		getName(void) const;
 		bool		getAuthorized(void) const;
 
-		void	setUsername(std::string);
-		void	setNickname(std::string);
+		void	setChannel(const std::string);
+		void	setUsername(const std::string);
+		void	setNickname(const std::string);
 		void	setOp(bool);
 		void	setName(bool);
 		void	setAuthorized(bool);
@@ -27,6 +29,7 @@ class Client {
 		bool		_name;
 		bool		_op;
 		bool		_authorized;
+		std::string	_channel;
 };
 
 # endif

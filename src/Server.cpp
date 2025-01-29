@@ -18,6 +18,10 @@ Server::~Server() {
 }
 
 void	Server::removeClient(int i) {
+	std::string	channelName = _serverClients[_pfd[i].fd]->getChannel();
+
+	if (channelName != "\0")
+		_serverChannels[channelName]->removeClient(_pfd[i].fd);
 	_serverClients.erase(_pfd[i].fd);
 	close(_pfd[i].fd);
 	_pfd[i] = _pfd[_currentOnline - 1];

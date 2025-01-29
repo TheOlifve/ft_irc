@@ -2,12 +2,16 @@
 # define CHANNEL_HPP
 
 #include "Irc.hpp"
+#include "Client.hpp"
+
+class Client;
 
 class Channel {
 	public:
 		Channel();
 		Channel(std::string, std::string);
-		void	joinChannel(const Client &, const std::vector<std::string> &);
+		void	removeClient(int);
+		void	joinChannel(Client &, const std::vector<std::string> &);
 		void	channelMessage(const int &, const std::string &);
 		~Channel();
 	private:

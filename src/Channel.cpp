@@ -12,19 +12,22 @@ Channel::Channel(std::string name, std::string key): _name(name), _key(key), _to
 }
 
 void	Channel::channelMessage(const int &cfd, const std::string &message) {
-	for (size_t i = 0; i < _users.size(); ++i) {
-		int	tmpfd = _users[i]->getUserFd();
-		std::string	prefix = _users[i]->getUsername();
-		prefix.append(": ");
-		prefix.append(message);
+	std::map<const int, const Client *>::const_iterator	it = _users.begin();
+
+	std::string	prefix = _users[cfd]->getUsername();
+	prefix.append(": ");
+	prefix.append(message);
+	while (it != _users.end()) {
+		int	tmpfd = it->second->getUserFd();
 		if (cfd != tmpfd) {
 			send(tmpfd, prefix.c_str(), prefix.length(), 0);
 		}
+		++it;
 	}
 }
 
-void	Channel::joinChannel(const Client &user, const std::vector<std::string> &tokens) {
-	int	cfd = user.getUserFd();
+void	Channel::joinChannel(Client &client, const std::vector<std::string> &tokens) {
+	int	cfd = client.getUserFd();
 
 	if (_users.find(cfd) != _users.end()) {
 		send(cfd, "Warning : You are already in this channel.\n", 43, 0);
@@ -42,10 +45,17 @@ void	Channel::joinChannel(const Client &user, const std::vector<std::string> &to
 		send(cfd, "Warning : Wrong channel key.\n", 29, 0);
 		return;
 	}
-	_users.insert(std::pair<const int,const Client *>(cfd, &user));
-	std::cout << "Client " << user.getUsername() << "[" << cfd << "] : Joined to the " << tokens[1] << " channel." << std::endl;
-	send(cfd, "Join : You have joined the channel.\n", 36, 0);
-	channelMessage(cfd, " connects to the channel.\n");
+	_users.insert(std::pair<const int,const Client *>(cfd, &client));
+	std::cout << "Client " << client.getUsername() << "[" << cfd << "] : Joined to the " << tokens[1] << " channel." << std::endl;
+	send(cfd, "You have joined the channel.\n", 29, 0);
+	client.setChannel(tokens[1]);
+	channelMessage(cfd, "connects to the channel.\n");
+}
+
+void	Channel::removeClient(int cfd) {
+	std::cout << "Client " << _users[cfd]->getUsername() << "[" << cfd << "] : Leave " << _users[cfd]->getChannel() << " channel." << std::endl;
+	channelMessage(cfd, " leave channel.\n");
+	_users.erase(cfd);
 }
 
 Channel::~Channel() {
