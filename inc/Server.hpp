@@ -20,6 +20,7 @@ class Server {
 		void	cmdHelp(int);
 		void	cmdJoin(const int &, const std::vector<std::string> &);
 		void	cmdMode(const int &, const std::vector<std::string> &);
+		void	cmdStatus(const int &cfd, const std::vector<std::string> &tokens);
 		void	parseMode(const int &cfd, const std::vector<std::string> &tokens, bool condition);
 		void	removeClient(int);
 		void	clientSignIn(int);
@@ -41,6 +42,7 @@ class Server {
 		int									_serverSocket;
 		sockaddr_in							_serverAddr;
 		std::map<int, Client *>				_serverClients;
+		std::map<std::string, int>			_ClientsID;
 		std::map<std::string, Channel *>	_serverChannels;
 		// std::map<int, Client *>	_serverClients;
 };

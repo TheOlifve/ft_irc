@@ -29,6 +29,7 @@ class Channel {
 		bool	getK(void) const;
 		bool	getO(void) const;
 		bool	getL(void) const;
+		std::string							getTopic(void) const;
 		std::map<const int,const Client *>	getUsers(void) const;
 		std::map<const int,const Client *>	getOps(void) const;
 	private:

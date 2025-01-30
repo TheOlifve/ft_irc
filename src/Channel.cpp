@@ -123,3 +123,10 @@ std::map<const int,const Client *>	Channel::getOps(void) const {
 	return _ops;
 }
 
+std::string	Channel::getTopic(void) const {
+	if (_topic.empty())
+		return "";
+	return _topic;
+}
+
+
