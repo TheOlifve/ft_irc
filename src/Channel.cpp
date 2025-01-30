@@ -53,8 +53,8 @@ void	Channel::joinChannel(Client &client, const std::vector<std::string> &tokens
 }
 
 void	Channel::removeClient(int cfd) {
-	std::cout << "Client " << _users[cfd]->getUsername() << "[" << cfd << "] : Leave " << _users[cfd]->getChannel() << " channel." << std::endl;
-	channelMessage(cfd, " leave channel.\n");
+	std::cout << "Client " << _users[cfd]->getUsername() << "[" << cfd << "] : Leaved channel (" << _users[cfd]->getChannel() << ")." << std::endl;
+	channelMessage(cfd, "leaved channel.\n");
 	_users.erase(cfd);
 }
 
