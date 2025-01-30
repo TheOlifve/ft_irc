@@ -62,3 +62,64 @@ Channel::~Channel() {
 	std::cout << "[ Channel destructor called ]" << std::endl;
 }
 
+void	Channel::setI(bool i) {
+	_i = i;
+}
+
+void	Channel::setT(bool t) {
+	_t = t;
+}
+
+void	Channel::setK(bool k) {
+	_k = k;
+}
+
+void	Channel::setO(bool o) {
+	_o = o;
+}
+
+void	Channel::setL(bool l) {
+	_l = l;
+}
+
+void	Channel::setKey(std::string key)
+{
+	_key = key;
+}
+
+void	Channel::setOp(const int &cfd, const Client *client) {
+	_ops.insert(std::pair<const int,const Client *>(cfd, client));
+}
+
+void	Channel::setLimit(int limit) {
+	_limit = limit;
+}
+
+bool	Channel::getI(void) const {
+	return _i;
+}
+
+bool	Channel::getT(void) const {
+	return _t;
+}
+
+bool	Channel::getK(void) const {
+	return _k;
+}
+
+bool	Channel::getO(void) const {
+	return _o;
+}
+
+bool	Channel::getL(void) const {
+	return _l;
+}
+
+std::map<const int,const Client *>	Channel::getUsers(void) const {
+	return _users;
+}
+
+std::map<const int,const Client *>	Channel::getOps(void) const {
+	return _ops;
+}
+

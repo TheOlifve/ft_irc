@@ -19,10 +19,13 @@ class Server {
 		void	newConnection(void);
 		void	cmdHelp(int);
 		void	cmdJoin(const int &, const std::vector<std::string> &);
+		void	cmdMode(const int &, const std::vector<std::string> &);
+		void	parseMode(const int &cfd, const std::vector<std::string> &tokens, bool condition);
 		void	removeClient(int);
 		void	clientSignIn(int);
 		void	clientInput(int);
 		void	createChannel(const std::vector<std::string> &);
+		void	assignOperator(const std::vector<std::string> &);
 		void	connectionMsgServ(int);
 		void	connectionMsgClient(int);
 		void	cmdParsing(int, std::vector<std::string> &);
