@@ -19,6 +19,7 @@ class Server {
 		void	newConnection(void);
 		void	cmdHelp(int, std::vector<std::string> &);
 		void	cmdQuit(int, std::vector<std::string> &);
+		void	cmdChannels(int, std::vector<std::string> &);
 		void	cmdJoin(const int &, const std::vector<std::string> &);
 		void	removeClient(int);
 		void	clientSignIn(int);

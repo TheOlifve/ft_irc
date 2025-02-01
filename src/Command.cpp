@@ -39,6 +39,45 @@ void	Server::cmdQuit(int cfd, std::vector<std::string> &tokens) {
 	send(cfd, text.c_str(), text.length(), 0);
 }
 
+std::string itos(int number) {
+	std::stringstream tmp;
+
+	tmp << number;
+	return tmp.str();
+}
+
+void	Server::cmdChannels(int cfd, std::vector<std::string> &tokens) {
+	std::string											text;
+	std::map<std::string, Channel *>::const_iterator	channels;
+
+	if (tokens.size() != 1) {
+		text = "Warning : Wrong number of parameters /CHANNELS.\n";
+		send(cfd, text.c_str(), text.length(), 0);
+		return;
+	}
+	text = "Channels\n_________________________\n";
+	send(cfd, text.c_str(), text.length(), 0);
+	channels = _serverChannels.begin();
+	for (; channels != _serverChannels.end(); ++channels) {
+		text = channels->first;
+		if (channels->second->getK() == true)
+			text.append(" | (K)");
+		if (channels->second->getI())
+			text.append(" | (I)");
+		text.append(" | (");
+		text.append(itos(channels->second->getOnline()));
+		if (channels->second->getL()) {
+			text.append("/");
+			text.append(itos(channels->second->getLimit()));
+		}
+		text.append(")\n");
+		send(cfd, text.c_str(), text.length(), 0);
+		text.erase();
+	}
+	text = "_________________________\n";
+	send(cfd, text.c_str(), text.length(), 0);
+}
+
 void	Server::cmdParsing(int cfd, std::vector<std::string> &tokens) {
 	if (!tokens[0].compare("/HELP"))
 		cmdHelp(cfd, tokens);
@@ -46,6 +85,8 @@ void	Server::cmdParsing(int cfd, std::vector<std::string> &tokens) {
 		cmdJoin(cfd, tokens);
 	else if (!tokens[0].compare("/Q"))
 		cmdQuit(cfd, tokens);
+	else if (!tokens[0].compare("/CHANNELS"))
+		cmdChannels(cfd, tokens);
 	else
 		send(cfd, "Unknown command.\n", 17, 0);
 }
@@ -128,6 +169,11 @@ void	Server::listAll(const std::vector<std::string> &tokens) {
 	std::cout << "________________________\n";
 }
 
+void	cmdUseage(void) {
+	std::cout << "Unknown command." << std::endl << \
+	"Available commands - /CREATE 'CHANNEL NAME' 'CHANNEL PASSWORD', /LIST" << std::endl;
+}
+
 void	Server::serverCmdParsing(const std::string &message) {
 	std::vector<std::string>	tokens(split(message));
 
@@ -136,7 +182,7 @@ void	Server::serverCmdParsing(const std::string &message) {
 	else if (!tokens[0].compare("/LIST"))
 		listAll(tokens);
 	else
-		std::cout << "Unknown command." << std::endl;
+		cmdUseage();
 }
 
 void	Server::cmdJoin(const int &cfd, const std::vector<std::string> &tokens) {

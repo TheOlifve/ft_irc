@@ -65,7 +65,7 @@ void	Server::startServer(void) {
 				if (_pfd[i].fd == _serverSocket) {
 					newConnection();
 				}
-				else if (_pfd[i].fd == 0) {
+				else if (_pfd[i].fd == 0 && i == 1) {
 					serverInput();
 				}
 				else
