@@ -4,6 +4,7 @@
 #include <poll.h>
 #include <sys/time.h>
 #include <iostream>
+#include <sstream>
 #include <cstring>
 #include <sys/types.h>
 #include <sys/socket.h>

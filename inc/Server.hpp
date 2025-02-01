@@ -17,7 +17,9 @@ class Server {
 		void	startServer(void);
 		void	createSocket(void);
 		void	newConnection(void);
-		void	cmdHelp(int);
+		void	cmdHelp(int, std::vector<std::string> &);
+		void	cmdQuit(int, std::vector<std::string> &);
+		void	cmdChannels(int, std::vector<std::string> &);
 		void	cmdJoin(const int &, const std::vector<std::string> &);
 		void	cmdMode(const int &, const std::vector<std::string> &);
 		void	cmdStatus(const int &cfd, const std::vector<std::string> &tokens);
@@ -32,6 +34,7 @@ class Server {
 		void	cmdParsing(int, std::vector<std::string> &);
 		void	authorization(int, int, std::string);
 		void	addUsername(int, std::string);
+		void	listAll(const std::vector<std::string> &);
 		void	serverCmdParsing(const std::string &);
 	private:
 		int									_port;

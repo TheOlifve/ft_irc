@@ -1,9 +1,9 @@
 #include "Channel.hpp"
 
-Channel::Channel(): _name(""), _key(""), _topic(""), _users() \
-					, _i(false), _t(false), _k(false), _o(false), _l(false) {}
+Channel::Channel(): _name(""), _key(""), _topic(""), _limit(0), _online(0)\
+					, _users(), _ops(), _i(false), _t(false), _k(false), _o(false), _l(false) {}
 
-Channel::Channel(std::string name, std::string key): _name(name), _key(key), _topic(""), _users() {
+Channel::Channel(std::string name, std::string key): _name(name), _key(key), _topic(""), _limit(0), _online(0), _users(), _ops(){
 	_i = false;
 	_t = false;
 	_k = false;
@@ -49,13 +49,15 @@ void	Channel::joinChannel(Client &client, const std::vector<std::string> &tokens
 	std::cout << "Client " << client.getUsername() << "[" << cfd << "] : Joined to the " << tokens[1] << " channel." << std::endl;
 	send(cfd, "You have joined the channel.\n", 29, 0);
 	client.setChannel(tokens[1]);
+	++_online;
 	channelMessage(cfd, "connects to the channel.\n");
 }
 
 void	Channel::removeClient(int cfd) {
-	std::cout << "Client " << _users[cfd]->getUsername() << "[" << cfd << "] : Leave " << _users[cfd]->getChannel() << " channel." << std::endl;
-	channelMessage(cfd, " leave channel.\n");
+	std::cout << "Client " << _users[cfd]->getUsername() << "[" << cfd << "] : Leaved channel (" << _users[cfd]->getChannel() << ")." << std::endl;
+	channelMessage(cfd, "leaved channel.\n");
 	_users.erase(cfd);
+	--_online;
 }
 
 Channel::~Channel() {
@@ -95,6 +97,14 @@ void	Channel::setLimit(int limit) {
 	_limit = limit;
 }
 
+
+int		Channel::getLimit(void) const {
+	return _limit;
+}
+int		Channel::getOnline(void) const {
+	return _online;
+}
+
 bool	Channel::getI(void) const {
 	return _i;
 }
@@ -128,5 +138,3 @@ std::string	Channel::getTopic(void) const {
 		return "";
 	return _topic;
 }
-
-

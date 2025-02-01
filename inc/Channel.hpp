@@ -14,7 +14,7 @@ class Channel {
 		void	joinChannel(Client &, const std::vector<std::string> &);
 		void	channelMessage(const int &, const std::string &);
 		~Channel();
-
+ 
 		void	setI(bool);
 		void	setT(bool);
 		void	setK(bool);
@@ -24,6 +24,8 @@ class Channel {
 		void	setLimit(int);
 		void	setOp(const int &, const Client *);
 
+		int		getLimit(void) const;
+		int		getOnline(void) const;
 		bool	getI(void) const;
 		bool	getT(void) const;
 		bool	getK(void) const;
@@ -37,6 +39,7 @@ class Channel {
 		std::string							_key;
 		std::string							_topic;
 		int									_limit;
+		int									_online;
 		std::map<const int,const Client *>	_users;
 		std::map<const int,const Client *>	_ops;
 		bool		_i;

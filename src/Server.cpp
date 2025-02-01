@@ -8,7 +8,7 @@ Server::Server(int port, char *password, int maxOnline): _port(port), _password(
 	_pfd = new pollfd[_maxOnline];
 	_pfd[0].fd = _serverSocket;
 	_pfd[0].events = POLLIN;
-	_pfd[1].fd = STDIN_FILENO;
+	_pfd[1].fd = 0;
 	_pfd[1].events = POLLIN;
 	_currentOnline = 2;
 }
@@ -65,7 +65,7 @@ void	Server::startServer(void) {
 				if (_pfd[i].fd == _serverSocket) {
 					newConnection();
 				}
-				else if (_pfd[i].fd == STDIN_FILENO) {
+				else if (_pfd[i].fd == 0 && i == 1) {
 					serverInput();
 				}
 				else
