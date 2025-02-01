@@ -14,6 +14,7 @@ class Channel {
 		void	joinChannel(Client &, const std::vector<std::string> &);
 		void	channelMessage(const int &, const std::string &);
 		~Channel();
+ 
 		void	setI(bool);
 		void	setT(bool);
 		void	setK(bool);

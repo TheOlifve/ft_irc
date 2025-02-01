@@ -11,6 +11,8 @@
 #include <netinet/in.h>
 #include <map>
 #include <unistd.h>
+#include <vector>
+#include <cstdlib>
 
 #include "Server.hpp"
 

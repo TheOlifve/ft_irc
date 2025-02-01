@@ -7,6 +7,7 @@ void	Server::addUsername(int cfd, std::string username) {
 		username = "Guest";
 	_serverClients[cfd]->setUsername(username);
 	_serverClients[cfd]->setName(true);
+	_ClientsID.insert(std::pair<std::string, int>(username, cfd));
 	std::cout << "Client [" << cfd << "] : logged in as " << username << std::endl;
 	tmp.append(username);
 	tmp.append(".\nEnter the command or type /HELP to see available commands.\n");
