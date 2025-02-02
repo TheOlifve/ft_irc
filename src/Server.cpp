@@ -17,15 +17,34 @@ Server::~Server() {
 	std::cout << "[ Server destructor called ]" << std::endl;
 }
 
-void	Server::removeClient(int i) {
-	std::string	channelName = _serverClients[_pfd[i].fd]->getChannel();
+void	Server::removeClient(int cfd) {
+	int									i = 0;
+	std::string							channelName;
+	std::map<int, Client*>::iterator	it = _serverClients.find(cfd);
 
+	if (cfd < 0) {
+		std::cout << "Error: Can't remove client - " << cfd << "." << std::endl;
+		return;
+	}
+	if (_serverClients[cfd]) {
+		channelName = _serverClients[cfd]->getChannel();
+	}
 	if (channelName != "\0")
-		_serverChannels[channelName]->removeClient(_pfd[i].fd);
-	_serverClients.erase(_pfd[i].fd);
+		_serverChannels[channelName]->removeClientCh(cfd);
+	if (_ClientsID.find(_serverClients[cfd]->getUsername()) != _ClientsID.end())
+		_ClientsID.erase(_serverClients[cfd]->getUsername());
+	if (it != _serverClients.end()) {
+		delete it->second;
+		_serverClients.erase(it);
+	}
+	while (i < _currentOnline) {
+		if (_pfd[i].fd == cfd)
+			break;
+		++i;
+	}
 	close(_pfd[i].fd);
 	_pfd[i] = _pfd[_currentOnline - 1];
-	_currentOnline--;
+	--_currentOnline;
 }
 
 void	Server::newConnection(void) {

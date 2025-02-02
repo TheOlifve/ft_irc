@@ -4,9 +4,7 @@ Client::Client(): _userFd(-1), _username(""), _nickname(""), _op(false), _author
 
 Client::Client(int userFd): _userFd(userFd), _username(""), _nickname(""), _op(false), _authorized(false), _channel("\0") {}
 
-Client::~Client() {
-	std::cout << "[ Client destructor called ]" << std::endl;
-}
+Client::~Client() {}
 
 
 int			Client::getUserFd(void) const { return _userFd; }

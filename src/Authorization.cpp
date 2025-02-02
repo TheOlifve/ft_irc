@@ -14,10 +14,10 @@ void	Server::addUsername(int cfd, std::string username) {
 	send(cfd, tmp.c_str(), tmp.length(), 0);
 }
 
-void	Server::authorization(int cfd, int i,std::string password) {
+void	Server::authorization(int cfd, std::string password) {
 	if (password.compare(_password)) {
 		send(cfd, "Wrong password.\nServer closed connection.\n", 42, 0);
-		removeClient(i);
+		removeClient(cfd);
 		std::cout << "Client [" << cfd << "] : disconected (wrong password)." << std::endl;
 		return ;
 	}

@@ -17,11 +17,14 @@ class Server {
 		void	startServer(void);
 		void	createSocket(void);
 		void	newConnection(void);
-		void	cmdHelp(int, std::vector<std::string> &);
-		void	cmdQuit(int, std::vector<std::string> &);
-		void	cmdChannels(int, std::vector<std::string> &);
+		void	cmdHelp(const int &, const std::vector<std::string> &);
+		void	cmdQuit(const int &, const std::vector<std::string> &);
+		void	cmdChannels(const int &, const std::vector<std::string> &);
 		void	cmdJoin(const int &, const std::vector<std::string> &);
 		void	cmdMode(const int &, const std::vector<std::string> &);
+		void	cmdExit(const int &, const std::vector<std::string> &);
+		void	cmdChangeUsername(const int &, const std::vector<std::string> &);
+		void	cmdChangeNickname(const int &, const std::vector<std::string> &);
 		void	cmdStatus(const int &cfd, const std::vector<std::string> &tokens);
 		void	parseMode(const int &cfd, const std::vector<std::string> &tokens, bool condition);
 		void	removeClient(int);
@@ -31,8 +34,8 @@ class Server {
 		void	assignOperator(const std::vector<std::string> &);
 		void	connectionMsgServ(int);
 		void	connectionMsgClient(int);
-		void	cmdParsing(int, std::vector<std::string> &);
-		void	authorization(int, int, std::string);
+		void	cmdParsing(const int &, const std::vector<std::string> &);
+		void	authorization(int, std::string);
 		void	addUsername(int, std::string);
 		void	listAll(const std::vector<std::string> &);
 		void	serverCmdParsing(const std::string &);
@@ -50,6 +53,7 @@ class Server {
 		// std::map<int, Client *>	_serverClients;
 };
 
-std::vector<std::string> split(const std::string& str);
+std::string					itos(int number);
+std::vector<std::string>	split(const std::string& str);
 
 # endif

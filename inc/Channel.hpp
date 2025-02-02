@@ -10,7 +10,7 @@ class Channel {
 	public:
 		Channel();
 		Channel(std::string, std::string);
-		void	removeClient(int);
+		void	removeClientCh(int);
 		void	joinChannel(Client &, const std::vector<std::string> &);
 		void	channelMessage(const int &, const std::string &);
 		~Channel();
