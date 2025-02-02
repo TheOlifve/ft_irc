@@ -176,6 +176,10 @@ void	Server::createChannel(const std::vector<std::string> &tokens) {
 		std::cout << "Wrong number of parameters: Usage /CREATE <channel> [<password>]." << std::endl;
 		return;
 	}
+	if (_serverChannels.find(tokens[1]) != _serverChannels.end()) {
+		std::cout << "ERROR: Channel with this name already exist." << std::endl;
+		return;
+	}
 	if (tokens.size() == 2) {
 		_serverChannels.insert(std::pair<std::string, Channel *>(tokens[1], new Channel(tokens[1], "")));
 		_serverChannels[tokens[1]]->setK(false);
