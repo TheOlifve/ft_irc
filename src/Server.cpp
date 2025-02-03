@@ -14,7 +14,16 @@ Server::Server(int port, char *password, int maxOnline): _port(port), _password(
 }
 
 Server::~Server() {
-	std::cout << "[ Server destructor called ]" << std::endl;
+	for (std::map<std::string, Channel *>::const_iterator it = _serverChannels.begin(); it != _serverChannels.end(); ++it) {
+		delete(it->second);
+	}
+	for (std::map<int, Client *>::const_iterator it = _serverClients.begin(); it != _serverClients.end(); ++it) {
+		delete(it->second);
+	}
+	for (int i = 0; i < _maxOnline; ++i) {
+		close(_pfd[i].fd);
+	}
+	delete [] _pfd;
 }
 
 void	Server::removeClient(int cfd) {

@@ -100,6 +100,32 @@ void	Server::cmdChannels(const int &cfd, const std::vector<std::string> &tokens)
 	send(cfd, text.c_str(), text.length(), 0);
 }
 
+void	Server::message(const int &cfd, const std::vector<std::string> &tokens) {
+	std::string	text("Wrong input.\n");
+
+	if (tokens[0].length() <= 0) {
+		send(cfd, text.c_str(), text.length(), 0);
+		return;
+	} else if (tokens[0][0] == '/') {
+		text = "Unknown command.\n";
+		send(cfd, text.c_str(), text.length(), 0);
+		return;
+	} else if (_serverClients[cfd]->getChannel() == "\0") {
+		text = "You have not joined a channel. Use /JOIN <channel> [<password>] to join a channel.\n";
+		send(cfd, text.c_str(), text.length(), 0);
+		return;
+	} else {
+		text = "\0";
+		for (size_t i = 0; i < tokens.size(); ++i) {
+			text.append(tokens[i]);
+			text.append(" ");
+		}
+		text.erase(text.find(" ", text.length() - 1));
+		text.append("\n");
+		_serverChannels[_serverClients[cfd]->getChannel()]->channelMessage(cfd, text);
+	}
+}
+
 void	Server::cmdParsing(const int &cfd, const std::vector<std::string> &tokens) {
 	if (!tokens[0].compare("/HELP"))
 		cmdHelp(cfd, tokens);
@@ -120,7 +146,7 @@ void	Server::cmdParsing(const int &cfd, const std::vector<std::string> &tokens) 
 	else if (!tokens[0].compare("/EXIT"))
 		cmdExit(cfd, tokens);
 	else
-		send(cfd, "Unknown command.\n", 17, 0);
+		message(cfd, tokens);
 }
 
 void	Server::clientInput(int i) {
@@ -138,9 +164,7 @@ void	Server::clientInput(int i) {
 	} else if (bytesRead > 0) {
 		buff[bytesRead - 1] = '\0';
 		tokens = split(buff);
-		text = "ERROR: Too short.\n";
 		if (tokens.size() <= 0) {
-			send(cfd, text.c_str(), text.length(), 0);
 			return;
 		}
 		if (!_serverClients[cfd]->getAuthorized())
@@ -152,8 +176,8 @@ void	Server::clientInput(int i) {
 	} else if (bytesRead == 0) {
 		text = "EXIT: EOF on input.\n";
 		send(cfd, text.c_str(), text.length(), 0);
-		std::cout << "Client [" << cfd << "] : disconnected (EOF on input)" << std::endl;
 		removeClient(cfd);
+		std::cout << "Client [" << cfd << "] : disconnected (EOF on input)" << std::endl;
 		return;
 	}
 	memset(buff, 0, 1024);
@@ -220,18 +244,39 @@ void	Server::assignOperator(const std::vector<std::string> &tokens) {
 	send(_ClientsID[tokens[2]], ".\n", 2, 0);
 }
 
-std::vector<std::string> split(const std::string& str) {
-	int							pos = 1;
-	std::string					tStr(str);
-	std::vector<std::string>	tokens;
 
-	while (pos > 0) {
-		pos = tStr.find(' ');
-		tokens.push_back(tStr.substr(0, pos));
-		tStr.erase(0, pos + 1);
+std::vector<std::string> split(const std::string &str) {
+	std::vector<std::string> tokens;
+	size_t start = 0;
+	size_t end;
+
+	while (start < str.length()) {
+		end = str.find(' ', start);
+		if (end == std::string::npos) {
+			if (end > start)
+				tokens.push_back(str.substr(start));
+			break;
+		}
+		if (end > start) {
+			tokens.push_back(str.substr(start, end - start));
+		}
+		start = end + 1;
 	}
 	return tokens;
 }
+
+// std::vector<std::string> split(const std::string& str) {
+// 	int							pos = 1;
+// 	std::string					tStr(str);
+// 	std::vector<std::string>	tokens;
+
+// 	while (pos > 0) {
+// 		pos = tStr.find(' ');
+// 		tokens.push_back(tStr.substr(0, pos));
+// 		tStr.erase(0, pos + 1);
+// 	}
+// 	return tokens;
+// }
 
 void	Server::listAll(const std::vector<std::string> &tokens) {
 	if (tokens.size() != 1) {
@@ -434,6 +479,7 @@ void	Server::serverInput(void) {
 		serverCmdParsing(message);
 	} else if (bytesRead == 0) {
 		std::cout << "EXIT: EOF on input." << std::endl;
+		exit(0);
 		return;
 	}
 }

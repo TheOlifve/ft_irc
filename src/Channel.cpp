@@ -54,9 +54,15 @@ void	Channel::joinChannel(Client &client, const std::vector<std::string> &tokens
 }
 
 void	Channel::removeClientCh(int cfd) {
-	std::cout << "Client " << _users[cfd]->getUsername() << "[" << cfd << "] : Leaved channel (" << _users[cfd]->getChannel() << ")." << std::endl;
-	channelMessage(cfd, "leaved channel.\n");
-	_users.erase(cfd);
+	if (_users.find(cfd) != _users.end()) {
+		std::cout << "Client " << _users[cfd]->getUsername() << "[" << cfd << "] : Leaved channel (" << _users[cfd]->getChannel() << ")." << std::endl;
+		channelMessage(cfd, "leaved channel.\n");
+		_users.erase(cfd);
+	} else if (_ops.find(cfd) != _ops.end()) {
+		std::cout << "Client " << _ops[cfd]->getUsername() << "[" << cfd << "] : Leaved channel (" << _ops[cfd]->getChannel() << ")." << std::endl;
+		channelMessage(cfd, "leaved channel.\n");
+		_ops.erase(cfd);
+	}
 	--_online;
 }
 

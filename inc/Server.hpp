@@ -2,8 +2,6 @@
 # define SERVER_HPP
 
 #include "Irc.hpp"
-#include "Client.hpp"
-#include "Channel.hpp"
 
 class Client;
 class Channel;
@@ -23,6 +21,7 @@ class Server {
 		void	cmdJoin(const int &, const std::vector<std::string> &);
 		void	cmdMode(const int &, const std::vector<std::string> &);
 		void	cmdExit(const int &, const std::vector<std::string> &);
+		void	message(const int &, const std::vector<std::string> &);
 		void	cmdChangeUsername(const int &, const std::vector<std::string> &);
 		void	cmdChangeNickname(const int &, const std::vector<std::string> &);
 		void	cmdStatus(const int &cfd, const std::vector<std::string> &tokens);

@@ -3,6 +3,14 @@
 void	Server::addUsername(int cfd, std::string username) {
 	std::string	tmp("You are logged in as ");
 
+	if (_ClientsID.find(username) != _ClientsID.end()) {
+		tmp = "Username ";
+		tmp.append(username);
+		tmp.append(" is already taken");
+		send(cfd, tmp.c_str(), tmp.length(), 0);
+		removeClient(cfd);
+		return;
+	}
 	if (!(username.compare("\0")))
 		username = "Guest";
 	_serverClients[cfd]->setUsername(username);
