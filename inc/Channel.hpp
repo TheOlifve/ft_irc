@@ -9,9 +9,10 @@ class Channel {
 	public:
 		Channel();
 		Channel(std::string, std::string);
-		void	removeClientCh(int);
-		void	joinChannel(Client &, const std::vector<std::string> &);
-		void	channelMessage(const int &, const std::string &);
+		void		removeClientCh(int);
+		void		joinChannel(Client &, const std::vector<std::string> &);
+		void		channelMessage(const Client &, const int, const std::string);
+		std::string	usersList(void);
 		~Channel();
  
 		void	setI(bool);
@@ -30,9 +31,10 @@ class Channel {
 		bool	getK(void) const;
 		bool	getO(void) const;
 		bool	getL(void) const;
+		std::string							getKey(void) const;
 		std::string							getTopic(void) const;
-		std::map<const int,const Client *>	getUsers(void) const;
 		std::map<const int,const Client *>	getOps(void) const;
+		std::map<const int,const Client *>	getUsers(void) const;
 	private:
 		std::string							_name;
 		std::string							_key;

@@ -1,8 +1,8 @@
 #include "Server.hpp"
 
-Server::Server(): _port(0), _password("0000"), _maxOnline(5), _currentOnline(0), _pfd(NULL), _serverSocket(0), _serverAddr() {}
+Server::Server(): _name("ft_irc"), _port(0), _password("0000"), _maxOnline(5), _currentOnline(0), _pfd(NULL), _serverSocket(0), _serverAddr() {}
 
-Server::Server(int port, char *password, int maxOnline): _port(port), _password(password) {
+Server::Server(int port, char *password, int maxOnline): _name("ft_irc"), _port(port), _password(password) {
 	_maxOnline = maxOnline + 2;
 	createSocket();
 	_pfd = new pollfd[_maxOnline];
@@ -24,6 +24,7 @@ Server::~Server() {
 		close(_pfd[i].fd);
 	}
 	delete [] _pfd;
+	close(_serverSocket);
 }
 
 void	Server::removeClient(int cfd) {
@@ -40,8 +41,8 @@ void	Server::removeClient(int cfd) {
 	}
 	if (channelName != "\0")
 		_serverChannels[channelName]->removeClientCh(cfd);
-	if (_ClientsID.find(_serverClients[cfd]->getUsername()) != _ClientsID.end())
-		_ClientsID.erase(_serverClients[cfd]->getUsername());
+	if (_ClientsID.find(_serverClients[cfd]->getNickname()) != _ClientsID.end())
+		_ClientsID.erase(_serverClients[cfd]->getNickname());
 	if (it != _serverClients.end()) {
 		delete it->second;
 		_serverClients.erase(it);
@@ -66,17 +67,15 @@ void	Server::newConnection(void) {
 		return ;
 	}
 	if (_currentOnline == _maxOnline) {
-		std::cout<< "Client [" << cfd << "] : connection failed (server is full).\n";
-		send(cfd, "ERROR: Server is full.\n", 23, 0);
+		sendMessage(cfd, ERR_SERVICESFULL, "");
 		close (cfd);
 		return ;
 	}
 	_pfd[_currentOnline].fd = cfd;
 	_pfd[_currentOnline].events = POLLIN;
 	_currentOnline++;
+	std::cout << "New connection on " << cfd << std::endl;
 	_serverClients.insert(std::pair<int, Client *>(cfd, new Client(cfd)));
-	connectionMsgServ(cfd);
-	connectionMsgClient(cfd);
 }
 
 void	Server::startServer(void) {

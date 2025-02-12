@@ -12,6 +12,7 @@ class Client {
 		std::string	getUsername(void) const;
 		std::string	getNickname(void) const;
 		bool		getOp(void) const;
+		bool		getPass(void) const;
 		bool		getName(void) const;
 		bool		getAuthorized(void) const;
 
@@ -19,6 +20,7 @@ class Client {
 		void	setUsername(const std::string);
 		void	setNickname(const std::string);
 		void	setOp(bool);
+		void	setPass(bool);
 		void	setName(bool);
 		void	setAuthorized(bool);
 		~Client();
@@ -29,6 +31,7 @@ class Client {
 		bool		_name;
 		bool		_op;
 		bool		_authorized;
+		bool		_pass;
 		std::string	_channel;
 };
 

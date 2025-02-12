@@ -11,16 +11,48 @@ Channel::Channel(std::string name, std::string key): _name(name), _key(key), _to
 	_l = false;
 }
 
-void	Channel::channelMessage(const int &cfd, const std::string &message) {
+void	Channel::channelMessage(const Client &client, const int code, const std::string token) {
+	int													cfd = client.getUserFd();
+	std::string											text;
 	std::map<const int, const Client *>::const_iterator	it = _users.begin();
 
-	std::string	prefix = _users[cfd]->getUsername();
-	prefix.append(": ");
-	prefix.append(message);
+	switch (code)
+	{
+		case RPL_JOINCHANNEL:
+			text = ":";
+			text.append(client.getNickname());
+			text.append("!");
+			text.append(client.getUsername());
+			text.append("@ft_irc JOIN ");
+			text.append(_name);
+			text.append("\r\n");
+			break;
+		case RPL_PART:
+			text = ":";
+			text.append(client.getNickname());
+			text.append("!");
+			text.append(client.getUsername());
+			text.append("@ft_irc PART ");
+			text.append(client.getChannel());
+			text.append(" :");
+			text.append(token);
+			text.append("\r\n");
+			break;
+		default:
+			break;
+	}
 	while (it != _users.end()) {
 		int	tmpfd = it->second->getUserFd();
 		if (cfd != tmpfd) {
-			send(tmpfd, prefix.c_str(), prefix.length(), 0);
+			send(tmpfd, text.c_str(), text.length(), 0);
+		}
+		++it;
+	}
+	it = _ops.begin();
+	while (it != _ops.end()) {
+		int	tmpfd = it->second->getUserFd();
+		if (cfd != tmpfd) {
+			send(tmpfd, text.c_str(), text.length(), 0);
 		}
 		++it;
 	}
@@ -29,38 +61,43 @@ void	Channel::channelMessage(const int &cfd, const std::string &message) {
 void	Channel::joinChannel(Client &client, const std::vector<std::string> &tokens) {
 	int	cfd = client.getUserFd();
 
-	if (_users.find(cfd) != _users.end()) {
-		send(cfd, "Warning : You are already in this channel.\n", 43, 0);
-		return;
+	if (_online == 0) {
+		client.setOp(true);
+		_ops.insert(std::pair<const int,const Client *>(cfd, &client));
 	}
-	if (_k == true && tokens.size() != 3) {
-		send(cfd, "Warning : Wrong number of parameters /JOIN 'NAME' 'KEY'.\n", 57, 0);
-		return;
-	}
-	if (_k == false && tokens.size() != 2) {
-		send(cfd, "Warning : Wrong number of parameters /JOIN 'NAME'.\n", 51, 0);
-		return;
-	}
-	if (_k && _key.compare(tokens[2])) {
-		send(cfd, "Warning : Wrong channel key.\n", 29, 0);
-		return;
-	}
-	_users.insert(std::pair<const int,const Client *>(cfd, &client));
-	std::cout << "Client " << client.getUsername() << "[" << cfd << "] : Joined to the " << tokens[1] << " channel." << std::endl;
-	send(cfd, "You have joined the channel.\n", 29, 0);
-	client.setChannel(tokens[1]);
+	else
+		_users.insert(std::pair<const int,const Client *>(cfd, &client));
+	std::cout << "Client " << client.getNickname() << "[" << cfd << "] : Joined to the " << tokens[1] << " channel." << std::endl;
 	++_online;
-	channelMessage(cfd, "connects to the channel.\n");
+	channelMessage(client, RPL_JOINCHANNEL, "");
+}
+
+std::string	Channel::usersList(void) {
+	std::string	text;
+	std::map<const int, const Client *>::const_iterator	it = _ops.begin();
+
+	for (; it != _ops.end(); ++it) {
+		text.append("@");
+		text.append(it->second->getNickname());
+		text.append(" ");
+	}
+	it = _users.begin();
+	for (; it != _users.end(); ++it) {
+		text.append(it->second->getNickname());
+		text.append(" ");
+	}
+	if (text.length() > 0) {
+		text[text.length() - 1] = '\0';
+	}
+	return (text);
 }
 
 void	Channel::removeClientCh(int cfd) {
 	if (_users.find(cfd) != _users.end()) {
-		std::cout << "Client " << _users[cfd]->getUsername() << "[" << cfd << "] : Leaved channel (" << _users[cfd]->getChannel() << ")." << std::endl;
-		channelMessage(cfd, "leaved channel.\n");
+		std::cout << "Client " << _users[cfd]->getNickname() << "[" << cfd << "] : Leaved channel (" << _users[cfd]->getChannel() << ")." << std::endl;
 		_users.erase(cfd);
 	} else if (_ops.find(cfd) != _ops.end()) {
-		std::cout << "Client " << _ops[cfd]->getUsername() << "[" << cfd << "] : Leaved channel (" << _ops[cfd]->getChannel() << ")." << std::endl;
-		channelMessage(cfd, "leaved channel.\n");
+		std::cout << "Client " << _ops[cfd]->getNickname() << "[" << cfd << "] : Leaved channel (" << _ops[cfd]->getChannel() << ")." << std::endl;
 		_ops.erase(cfd);
 	}
 	--_online;
@@ -137,6 +174,10 @@ std::map<const int,const Client *>	Channel::getUsers(void) const {
 
 std::map<const int,const Client *>	Channel::getOps(void) const {
 	return _ops;
+}
+
+std::string	Channel::getKey(void) const {
+	return _key;
 }
 
 std::string	Channel::getTopic(void) const {

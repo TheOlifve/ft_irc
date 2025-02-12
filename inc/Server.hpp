@@ -11,11 +11,13 @@ class Server {
 		Server();
 		Server(int, char *, int);
 		~Server();
+		int		createChannel(const int &, const std::vector<std::string> &);
 		void	serverInput(void);
 		void	startServer(void);
 		void	createSocket(void);
 		void	newConnection(void);
 		void	cmdHelp(const int &, const std::vector<std::string> &);
+		void	cmdPart(const int &, const std::vector<std::string> &);
 		void	cmdQuit(const int &, const std::vector<std::string> &);
 		void	cmdChannels(const int &, const std::vector<std::string> &);
 		void	cmdJoin(const int &, const std::vector<std::string> &);
@@ -29,16 +31,15 @@ class Server {
 		void	removeClient(int);
 		void	clientSignIn(int);
 		void	clientInput(int);
-		void	createChannel(const std::vector<std::string> &);
 		void	assignOperator(const std::vector<std::string> &);
-		void	connectionMsgServ(int);
-		void	connectionMsgClient(int);
 		void	cmdParsing(const int &, const std::vector<std::string> &);
-		void	authorization(int, std::string);
-		void	addUsername(int, std::string);
+		void	authorization(const int &, const std::vector<std::string> &);;
+		void	addNickname(const int &, const std::string &);
 		void	listAll(const std::vector<std::string> &);
 		void	serverCmdParsing(const std::string &);
+		void	sendMessage(const int &, const int, const std::string);
 	private:
+		std::string							_name;
 		int									_port;
 		std::string							_password;
 		int									_maxOnline;
@@ -49,10 +50,10 @@ class Server {
 		std::map<int, Client *>				_serverClients;
 		std::map<std::string, int>			_ClientsID;
 		std::map<std::string, Channel *>	_serverChannels;
-		// std::map<int, Client *>	_serverClients;
 };
 
-std::string					itos(int number);
-std::vector<std::string>	split(const std::string& str);
+void	replaceWhiteSpaces(std::string &str);
+std::string	itos(int number);
+std::vector<std::string>	split(std::string str);
 
 # endif
