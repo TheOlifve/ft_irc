@@ -156,6 +156,33 @@ void	Server::sendMessage(const int &cfd, const int code, const std::string token
 		case RPL_PING:
 			text = "PING ft_irc\r\n";
 			break;
+        case ERR_CHANOPRIVSNEEDED:
+            text = ":ft_irc 482 ";
+            text.append(_serverClients[cfd]->getNickname());
+            text.append(" ");
+            text.append(token);
+            text.append(" :You're not channel operator\r\n");
+            break;
+        case RPL_KICK:
+            text = ":";
+            text.append(_serverClients[cfd]->getNickname());
+            text.append("!");
+            text.append(_serverClients[cfd]->getUsername());
+            text.append("@ft_irc KICK ");
+            text.append(_serverClients[cfd]->getChannel());
+            text.append(" ");
+            text.append(token);
+            text.append("\r\n");
+            break;
+        case RPL_INVITE:
+            text = ":";
+            text.append(_serverClients[cfd]->getNickname());
+            text.append("!");
+            text.append(_serverClients[cfd]->getUsername());
+            text.append("@ft_irc INVITE ");
+            text.append(token);
+            text.append("\r\n");
+            break;
 		default:
 			break;
 	}

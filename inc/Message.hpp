@@ -26,5 +26,12 @@
 #define ERR_PASSWDMISMATCH		464
 #define ERR_NEEDMOREPARAMS		461
 #define RPL_HELPTXT				705
+#define ERR_CHANOPRIVSNEEDED    482
+#define ERR_UNKNOWNMODE         472
+#define ERR_NOSUCHNICK          401
+#define ERR_USERNOTINCHANNEL    441
+#define RPL_INVITING            341
+#define RPL_INVITE              345
+#define RPL_KICK                367
 
 # endif

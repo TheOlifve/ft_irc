@@ -141,9 +141,14 @@ void	Channel::setL(bool l) {
 	_l = l;
 }
 
+
 void	Channel::setKey(std::string key)
 {
 	_key = key;
+}
+
+void Channel::setTopic(const std::string &topic) {
+    _topic = topic;
 }
 
 void	Channel::setOp(const int &cfd, const Client *client) {

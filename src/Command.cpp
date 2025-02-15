@@ -179,6 +179,12 @@ void	Server::cmdParsing(const int &cfd, const std::vector<std::string> &tokens) 
 		cmdNick(cfd, tokens);
 	else if (!tokens[0].compare("PONG"))
 		cmdPing(cfd);
+	else if (!tokens[0].compare("KICK"))
+        cmdKick(cfd, tokens);
+    else if (!tokens[0].compare("INVITE"))
+        cmdInvite(cfd, tokens);
+    else if (!tokens[0].compare("TOPIC"))
+        cmdTopic(cfd, tokens);
 	else
 		message(cfd, tokens);
 }
@@ -475,4 +481,122 @@ void	Server::serverInput(void) {
 	bytesRead = read(0, buff, sizeof(buff) - 1);
 	if (bytesRead == 0)
 		throw std::runtime_error("EXIT: EOF on input!");
+}
+
+// ... existing code ...
+
+void Server::cmdKick(const int &cfd, const std::vector<std::string> &tokens) {
+    if (tokens.size() < 3) {
+        sendMessage(cfd, ERR_NEEDMOREPARAMS, "KICK");
+        return;
+    }
+    
+    std::string channelName = tokens[1];
+    std::string targetNick = tokens[2];
+    std::string reason = tokens.size() > 3 ? tokens[3] : "No reason given";
+    
+    // Check if channel exists
+    if (_serverChannels.find(channelName) == _serverChannels.end()) {
+        sendMessage(cfd, ERR_NOSUCHCHANNEL, channelName);
+        return;
+    }
+    
+    // Check if user is operator
+    if (!_serverChannels[channelName]->getOps()[cfd]) {
+        sendMessage(cfd, ERR_CHANOPRIVSNEEDED, channelName);
+        return;
+    }
+    
+    // Find target user
+    if (_ClientsID.find(targetNick) == _ClientsID.end()) {
+        sendMessage(cfd, ERR_NOSUCHNICK, targetNick);
+        return;
+    }
+    
+    int targetFd = _ClientsID[targetNick];
+    if (_serverClients[targetFd]->getChannel() != channelName) {
+        sendMessage(cfd, ERR_USERNOTINCHANNEL, targetNick);
+        return;
+    }
+    
+    // Send kick message to channel and remove user
+    _serverChannels[channelName]->channelMessage(*_serverClients[cfd], RPL_KICK, targetNick + " :" + reason);
+    _serverChannels[channelName]->removeClientCh(targetFd);
+    _serverClients[targetFd]->setChannel("\0");
+}
+
+void Server::cmdInvite(const int &cfd, const std::vector<std::string> &tokens) {
+    if (tokens.size() != 3) {
+        sendMessage(cfd, ERR_NEEDMOREPARAMS, "INVITE");
+        return;
+    }
+    
+    std::string targetNick = tokens[1];
+    std::string channelName = tokens[2];
+    
+    // Check if channel exists
+    if (_serverChannels.find(channelName) == _serverChannels.end()) {
+        sendMessage(cfd, ERR_NOSUCHCHANNEL, channelName);
+        return;
+    }
+    
+    // Check if user has permission to invite
+    if (_serverChannels[channelName]->getI() && !_serverChannels[channelName]->getOps()[cfd]) {
+        sendMessage(cfd, ERR_CHANOPRIVSNEEDED, channelName);
+        return;
+    }
+    
+    // Find target user
+    if (_ClientsID.find(targetNick) == _ClientsID.end()) {
+        sendMessage(cfd, ERR_NOSUCHNICK, targetNick);
+        return;
+    }
+    
+    int targetFd = _ClientsID[targetNick];
+    if (_serverClients[targetFd]->getChannel() == channelName) {
+        sendMessage(cfd, ERR_USERONCHANNEL, targetNick);
+        return;
+    }
+    
+    // Send invite notification
+    sendMessage(targetFd, RPL_INVITE, channelName);
+    sendMessage(cfd, RPL_INVITING, targetNick + " " + channelName);
+}
+
+void Server::cmdTopic(const int &cfd, const std::vector<std::string> &tokens) {
+    if (tokens.size() < 2) {
+        sendMessage(cfd, ERR_NEEDMOREPARAMS, "TOPIC");
+        return;
+    }
+    
+    std::string channelName = tokens[1];
+    
+    // Check if channel exists
+    if (_serverChannels.find(channelName) == _serverChannels.end()) {
+        sendMessage(cfd, ERR_NOSUCHCHANNEL, channelName);
+        return;
+    }
+    
+    // If no topic provided, show current topic
+    if (tokens.size() == 2) {
+        if (_serverChannels[channelName]->getTopic().empty())
+            sendMessage(cfd, RPL_NOTOPIC, channelName);
+        else
+            sendMessage(cfd, RPL_TOPIC, _serverChannels[channelName]->getTopic());
+        return;
+    }
+    
+    // Check if user has permission to change topic
+    if (_serverChannels[channelName]->getT() && !_serverChannels[channelName]->getOps()[cfd]) {
+        sendMessage(cfd, ERR_CHANOPRIVSNEEDED, channelName);
+        return;
+    }
+    
+    // Set new topic
+    std::string newTopic = tokens[2];
+    for (size_t i = 3; i < tokens.size(); ++i)
+        newTopic += " " + tokens[i];
+    
+    _serverChannels[channelName]->setTopic(newTopic);
+    _serverChannels[channelName]->channelMessage(*_serverClients[cfd], RPL_TOPIC, newTopic);
 }

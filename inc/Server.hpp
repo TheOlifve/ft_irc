@@ -34,6 +34,9 @@ class Server {
 		void	cmdParsing(const int &, const std::vector<std::string> &);
 		void	authorization(const int &, const std::vector<std::string> &);;
 		void	sendMessage(const int &, const int, const std::string);
+        void    cmdKick(const int &, const std::vector<std::string> &);
+        void    cmdInvite(const int &, const std::vector<std::string> &);
+        void    cmdTopic(const int &, const std::vector<std::string> &);
 
 		bool	getListening(void) const;
 	private:
