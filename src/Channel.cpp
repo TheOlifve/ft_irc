@@ -1,9 +1,9 @@
 #include "Channel.hpp"
 
-Channel::Channel(): _name(""), _key(""), _topic(""), _limit(0), _online(0)\
+Channel::Channel(): _name("\0"), _key("\0"), _topic("\0"), _limit(0), _online(0)\
 					, _users(), _ops(), _i(false), _t(false), _k(false), _o(false), _l(false) {}
 
-Channel::Channel(std::string name, std::string key): _name(name), _key(key), _topic(""), _limit(0), _online(0), _users(), _ops(){
+Channel::Channel(std::string name, std::string key): _name(name), _key(key), _topic("\0"), _limit(0), _online(0), _users(), _ops(){
 	_i = false;
 	_t = false;
 	_k = false;
@@ -23,7 +23,7 @@ void	Channel::channelMessage(const Client &client, const int code, const std::st
 			text.append(client.getNickname());
 			text.append("!");
 			text.append(client.getUsername());
-			text.append("@ft_irc JOIN ");
+			text.append("@ft_irc JOIN :");
 			text.append(_name);
 			text.append("\r\n");
 			break;
@@ -38,22 +38,38 @@ void	Channel::channelMessage(const Client &client, const int code, const std::st
 			text.append(token);
 			text.append("\r\n");
 			break;
+		case RPL_QUIT:
+			text = ":";
+			text.append(client.getNickname());
+			text.append("!");
+			text.append(client.getUsername());
+			text.append("@ft_irc QUIT :");
+			text.append(token);
+			text.append("\r\n");
+			break;
+		case RPL_NICK:
+			text = ":";
+			text.append(token);
+			text.append("!");
+			text.append(client.getUsername());
+			text.append("@ft_irc NICK :");
+			text.append(client.getNickname());
+			text.append("\r\n");
+			break;
 		default:
 			break;
 	}
 	while (it != _users.end()) {
 		int	tmpfd = it->second->getUserFd();
-		if (cfd != tmpfd) {
+		if (cfd != tmpfd)
 			send(tmpfd, text.c_str(), text.length(), 0);
-		}
 		++it;
 	}
 	it = _ops.begin();
 	while (it != _ops.end()) {
 		int	tmpfd = it->second->getUserFd();
-		if (cfd != tmpfd) {
+		if (cfd != tmpfd)
 			send(tmpfd, text.c_str(), text.length(), 0);
-		}
 		++it;
 	}
 }
@@ -103,9 +119,7 @@ void	Channel::removeClientCh(int cfd) {
 	--_online;
 }
 
-Channel::~Channel() {
-	std::cout << "[ Channel destructor called ]" << std::endl;
-}
+Channel::~Channel() {}
 
 void	Channel::setI(bool i) {
 	_i = i;
@@ -178,6 +192,10 @@ std::map<const int,const Client *>	Channel::getOps(void) const {
 
 std::string	Channel::getKey(void) const {
 	return _key;
+}
+
+std::string	Channel::getName(void) const {
+	return _name;
 }
 
 std::string	Channel::getTopic(void) const {

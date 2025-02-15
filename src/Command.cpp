@@ -1,7 +1,7 @@
 #include "Server.hpp"
 
 void	Server::cmdHelp(const int &cfd, const std::vector<std::string> &tokens) {
-	std::string	text("CHANNELS, JOIN, Q, USER, NICK, PM, EXIT");
+	std::string	text("HELP, JOIN, PART, QUIT, USER, NICK, PRIVMSG");
 
 	if (tokens.size() != 1) {
 		sendMessage(cfd, ERR_NEEDMOREPARAMS, "HELP");
@@ -15,47 +15,79 @@ void	Server::cmdHelp(const int &cfd, const std::vector<std::string> &tokens) {
 
 void	Server::cmdQuit(const int &cfd, const std::vector<std::string> &tokens) {
 	std::string	text;
+	if (tokens.size() != 1 && tokens.size() != 2) {
+		sendMessage(cfd, ERR_NEEDMOREPARAMS, "QUIT");
+		return;
+	}
+	if (tokens.size() == 1)
+		text = "QUIT";
+	else if (tokens.size() == 2 && tokens[1].size() == 1 && tokens[1][0] == ':')
+		text = "QUIT";
+	else
+		text = tokens[1];
+	if (_serverClients[cfd]->getChannel() != "\0") {
+		_serverChannels[_serverClients[cfd]->getChannel()]->channelMessage(*_serverClients[cfd], RPL_QUIT, text);
+	}
+	sendMessage(cfd, RPL_QUIT, text);
+	removeClient(cfd);
+	std::cout << "Client [" << cfd << "] : disconnected (QUIT)" << std::endl;
+}
+
+void	Server::cmdUser(const int &cfd, const std::vector<std::string> &tokens) {
+	if (tokens.size() < 2) {
+		sendMessage(cfd, ERR_NEEDMOREPARAMS, "USER");
+		return;
+	}
+	if (tokens[1] != "\0")
+		_serverClients[cfd]->setUsername(tokens[1]);
+	else
+		_serverClients[cfd]->setUsername("user");
+}
+
+
+void	Server::cmdList(const int &cfd, const std::vector<std::string> &tokens) {
+	std::string											text;
+	std::map<std::string, Channel *>::const_iterator	it = _serverChannels.begin();
 
 	if (tokens.size() != 1) {
-		text = "Warning: Wrong number of parameters Q.\n";
-		send(cfd, text.c_str(), text.length(), 0);
-		return;
+		sendMessage(cfd, ERR_NEEDMOREPARAMS, "LIST");
 	}
-	if (_serverClients[cfd]->getChannel() == "\0") {
-		text = "Warning: You are not in any channel.\n";
-		send(cfd, text.c_str(), text.length(), 0);
-		return;
+	sendMessage(cfd, RPL_LISTSTART, "");
+	for (; it != _serverChannels.end(); ++it) {
+		text = it->second->getName();
+		text.append(" ");
+		text.append(itos(it->second->getOnline()));
+		text.append(" :");
+		text.append(it->second->getTopic());
+		sendMessage(cfd, RPL_LIST, text);
 	}
-	_serverChannels[_serverClients[cfd]->getChannel()]->removeClientCh(cfd);
-	text = "You left the channel ";
-	text.append(_serverClients[cfd]->getChannel());
-	text.append(".\n");
-	_serverClients[cfd]->setChannel("");
-	send(cfd, text.c_str(), text.length(), 0);
+	sendMessage(cfd, RPL_LISTEND, "");
 }
 
-void	Server::cmdChangeUsername(const int &cfd, const std::vector<std::string> &tokens) {
-	std::string	text;
+
+void	Server::cmdNick(const int &cfd, const std::vector<std::string> &tokens) {
+	std::string	oldNick = "\0";
 
 	if (tokens.size() != 2) {
-		text = "Warning: Wrong number of parameters /USER <new username>.\n";
-		send(cfd, text.c_str(), text.length(), 0);
+		sendMessage(cfd, ERR_NEEDMOREPARAMS, "NICK");
 		return;
 	}
-	if (tokens[2] != "\0")
-		_serverClients[cfd]->setUsername(tokens[2]);
-}
-
-void	Server::cmdChangeNickname(const int &cfd, const std::vector<std::string> &tokens) {
-	std::string	text;
-
-	if (tokens.size() != 2) {
-		text = "Warning: Wrong number of parameters /NICK <new nickname>.\n";
-		send(cfd, text.c_str(), text.length(), 0);
+	if (_ClientsID.find(tokens[1]) != _ClientsID.end()) {
+		sendMessage(cfd, ERR_NICKNAMEINUSE, tokens[1]);
 		return;
 	}
-	if (tokens[2] != "\0")
-		_serverClients[cfd]->setNickname(tokens[2]);
+	if (_serverClients[cfd]->getName() == true) {
+		_ClientsID.erase(_serverClients[cfd]->getNickname());
+		oldNick = _serverClients[cfd]->getNickname();
+	}
+	if (!(tokens[1].compare("\0")))
+		_serverClients[cfd]->setNickname("Guest");
+	else
+		_serverClients[cfd]->setNickname(tokens[1]);
+	if (_serverClients[cfd]->getChannel() != "\0")
+		_serverChannels[_serverClients[cfd]->getChannel()]->channelMessage(*_serverClients[cfd], RPL_NICK, oldNick);
+	_serverClients[cfd]->setName(true);
+	_ClientsID.insert(std::pair<std::string, int>(tokens[1], cfd));
 }
 
 std::string	itos(int number) {
@@ -63,38 +95,6 @@ std::string	itos(int number) {
 
 	tmp << number;
 	return tmp.str();
-}
-
-void	Server::cmdChannels(const int &cfd, const std::vector<std::string> &tokens) {
-	std::string											text;
-	std::map<std::string, Channel *>::const_iterator	channels;
-
-	if (tokens.size() != 1) {
-		text = "Warning: Wrong number of parameters /CHANNELS.\n";
-		send(cfd, text.c_str(), text.length(), 0);
-		return;
-	}
-	text = "Channels\n_________________________\n";
-	send(cfd, text.c_str(), text.length(), 0);
-	channels = _serverChannels.begin();
-	for (; channels != _serverChannels.end(); ++channels) {
-		text = channels->first;
-		if (channels->second->getK() == true)
-			text.append(" | (K)");
-		if (channels->second->getI())
-			text.append(" | (I)");
-		text.append(" | (");
-		text.append(itos(channels->second->getOnline()));
-		if (channels->second->getL()) {
-			text.append("/");
-			text.append(itos(channels->second->getLimit()));
-		}
-		text.append(")\n");
-		send(cfd, text.c_str(), text.length(), 0);
-		text.erase();
-	}
-	text = "_________________________\n";
-	send(cfd, text.c_str(), text.length(), 0);
 }
 
 void	Server::message(const int &cfd, const std::vector<std::string> &tokens) {
@@ -132,7 +132,7 @@ void	Server::cmdPart(const int &cfd, const std::vector<std::string> &tokens) {
 		sendMessage(cfd, ERR_NOSUCHCHANNEL, tokens[1]);
 		return;
 	}
-	if (_serverClients[cfd]->getChannel() == "" ||
+	if (_serverClients[cfd]->getChannel() == "\0" ||
 			_serverClients[cfd]->getChannel().compare(tokens[1])) {
 		sendMessage(cfd, ERR_NOTONCHANNEL, tokens[1]);
 		return;
@@ -146,8 +146,16 @@ void	Server::cmdPart(const int &cfd, const std::vector<std::string> &tokens) {
 		_serverChannels[tokens[1]]->channelMessage(*_serverClients[cfd], RPL_PART, tokens[2]);
 	}
 	_serverChannels[tokens[1]]->removeClientCh(cfd);
+	if (_serverChannels[tokens[1]]->getOnline() == 0) {
+		delete(_serverChannels[tokens[1]]);
+		_serverChannels.erase(tokens[1]);
+	}
 	_serverClients[cfd]->setOp(false);
-	_serverClients[cfd]->setChannel("");
+	_serverClients[cfd]->setChannel("\0");
+}
+
+void	Server::cmdPing(const int &cfd) {
+	sendMessage(cfd, RPL_PING, "\0");
 }
 
 void	Server::cmdParsing(const int &cfd, const std::vector<std::string> &tokens) {
@@ -163,14 +171,14 @@ void	Server::cmdParsing(const int &cfd, const std::vector<std::string> &tokens) 
 	// 	cmdMode(cfd, tokens);
 	else if (!tokens[0].compare("STATUS"))
 		cmdStatus(cfd, tokens);
-	else if (!tokens[0].compare("CHANNELS"))
-		cmdChannels(cfd, tokens);
+	else if (!tokens[0].compare("LIST"))
+		cmdList(cfd, tokens);
 	else if (!tokens[0].compare("USER"))
-		cmdChangeUsername(cfd, tokens);
+		cmdUser(cfd, tokens);
 	else if (!tokens[0].compare("NICK"))
-		cmdChangeNickname(cfd, tokens);
-	else if (!tokens[0].compare("EXIT"))
-		cmdExit(cfd, tokens);
+		cmdNick(cfd, tokens);
+	else if (!tokens[0].compare("PONG"))
+		cmdPing(cfd);
 	else
 		message(cfd, tokens);
 }
@@ -197,7 +205,7 @@ void	Server::clientInput(int i) {
 		return;
 	} else if (bytesRead > 0) {
 		buff[bytesRead - 1] = '\0';
-		std::cout << buff << std::endl;
+		std::cout << "From client [" << cfd << "] - " <<  buff << std::endl;
 		tokens = split(buff);
 		if (tokens.size() <= 0) {
 			return;
@@ -207,20 +215,16 @@ void	Server::clientInput(int i) {
 		else
 			cmdParsing(cfd, tokens);
 	} else if (bytesRead == 0) {
+		if (_serverClients[cfd]->getAuthorized()) {
+			sendMessage(cfd, RPL_QUIT, "QUIT");
+			if (_serverClients[cfd]->getChannel() != "\0")
+				_serverChannels[_serverClients[cfd]->getChannel()]->channelMessage(*_serverClients[cfd], RPL_QUIT, "QUIT");
+		}
 		removeClient(cfd);
 		std::cout << "Client [" << cfd << "] : disconnected (EOF on input)" << std::endl;
 		return;
 	}
 	memset(buff, 0, 1024);
-}
-
-void	Server::cmdExit(const int &cfd, const std::vector<std::string> &tokens) {
-	if (tokens.size() != 1) {
-		sendMessage(cfd, ERR_NEEDMOREPARAMS, "EXIT");
-		return;
-	}
-	removeClient(cfd);
-	std::cout << "Client [" << cfd << "] : disconnected (EXIT)" << std::endl;
 }
 
 int	Server::createChannel(const int &cfd, const std::vector<std::string> &tokens) {
@@ -292,46 +296,6 @@ std::vector<std::string> split(std::string str) {
 	return tokens;
 }
 
-void	Server::listAll(const std::vector<std::string> &tokens) {
-	if (tokens.size() != 1) {
-		std::cout << "Warning: Wrong number of parameters /LIST." << std::endl;
-		return;
-	}
-	std::map<int, Client *>::const_iterator				itClients = _serverClients.begin();
-	std::map<std::string, Channel *>::const_iterator	itChannels = _serverChannels.begin();
-
-	std::cout << "Clients Online\n________________________\n";
-	while (itClients != _serverClients.end()) {
-		std::cout << itClients->second->getNickname() << " (" << itClients->second->getUserFd() << ")." << std::endl;
-		++itClients;
-	}
-	std::cout << "________________________\n";
-	std::cout << "Channels\n________________________\n";
-	while (itChannels != _serverChannels.end()) {
-		std::cout << itChannels->first << std::endl;
-		++itChannels;
-	}
-	std::cout << "________________________\n";
-}
-
-void	cmdUseage(void) {
-	std::cout << "Unknown command." << std::endl << \
-	"Available commands - /CREATE <#channel> [<password>], /LIST, /OPERATOR <#channel> <nickname>" << std::endl;
-}
-
-void	Server::serverCmdParsing(const std::string &message) {
-	std::vector<std::string>	tokens(split(message));
-
-	if (tokens.size() <= 0 )
-		return;
-	else if (!tokens[0].compare("/OPERATOR"))
-		assignOperator(tokens);
-	else if (!tokens[0].compare("/LIST"))
-		listAll(tokens);
-	else
-		cmdUseage();
-}
-
 void	Server::cmdJoin(const int &cfd, const std::vector<std::string> &tokens) {
 	if (!(tokens.size() == 3 || tokens.size() == 2)) {
 		sendMessage(cfd, ERR_NEEDMOREPARAMS, "JOIN");
@@ -353,7 +317,7 @@ void	Server::cmdJoin(const int &cfd, const std::vector<std::string> &tokens) {
 		return;
 	}
 	if (_serverChannels[tokens[1]]->getK() == true &&
-	_serverChannels[tokens[1]]->getKey().compare(tokens[2])) {
+			_serverChannels[tokens[1]]->getKey().compare(tokens[2])) {
 		sendMessage(cfd, ERR_BADCHANNELKEY, tokens[1]);
 		return;
 	}
@@ -368,8 +332,6 @@ void	Server::cmdJoin(const int &cfd, const std::vector<std::string> &tokens) {
 		sendMessage(cfd, RPL_TOPIC, _serverChannels[tokens[1]]->getTopic());
 	else
 		sendMessage(cfd, RPL_NOTOPIC, "");
-	sendMessage(cfd, RPL_NAMREPLY, _serverChannels[tokens[1]]->usersList());
-	sendMessage(cfd, RPL_ENDOFNAMES, "");
 	sendMessage(cfd, RPL_NAMREPLY, _serverChannels[tokens[1]]->usersList());
 	sendMessage(cfd, RPL_ENDOFNAMES, "");
 }
@@ -400,7 +362,7 @@ void	Server::parseMode(const int &cfd, const std::vector<std::string> &tokens, b
 		if (condition && tokens.size() == 4)
 			_serverChannels[tokens[1].substr(1)]->setKey(tokens[3]);
 		else
-			_serverChannels[tokens[1].substr(1)]->setKey("");
+			_serverChannels[tokens[1].substr(1)]->setKey("\0");
 		if (condition)
 			send(cfd, "You have set the channel to be password protected.\n", 51, 0);
 		else
@@ -511,13 +473,6 @@ void	Server::serverInput(void) {
 	std::string	message;
 
 	bytesRead = read(0, buff, sizeof(buff) - 1);
-	if (bytesRead > 0) {
-		buff[bytesRead - 1] = '\0';
-		message = buff;
-		serverCmdParsing(message);
-	} else if (bytesRead == 0) {
-		std::cout << "EXIT: EOF on input." << std::endl;
-		exit(0);
-		return;
-	}
+	if (bytesRead == 0)
+		throw std::runtime_error("EXIT: EOF on input!");
 }

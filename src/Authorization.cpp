@@ -1,59 +1,42 @@
 #include "Server.hpp"
 
-void	Server::addNickname(const int &cfd, const std::string &nickname) {
-	std::string	text;
-
-	if (_ClientsID.find(nickname) != _ClientsID.end()) {
-		sendMessage(cfd, ERR_NICKNAMEINUSE, nickname);
-		return;
-	}
-	if (!(nickname.compare("\0")))
-		_serverClients[cfd]->setNickname("Guest");
-	else
-		_serverClients[cfd]->setNickname(nickname);
-	_serverClients[cfd]->setName(true);
-	_ClientsID.insert(std::pair<std::string, int>(nickname, cfd));
-}
-
 void	Server::authorization(const int &cfd, const std::vector<std::string> &tokens) {
 	if (!_serverClients[cfd]->getPass()) {
-		if (tokens[0].compare("PASS")) {
-			sendMessage(cfd, ERR_PASSWDMISMATCH, "");
+		if (tokens.size() != 2) {
+			sendMessage(cfd, ERR_NEEDMOREPARAMS, "PASS");
+			std::cout << "Client [" << cfd << "] : disconnected (wrong pass params)" << std::endl;
+			removeClient(cfd);
 			return;
-		} else if (tokens.size() != 2) {
-			sendMessage(cfd, ERR_NEEDMOREPARAMS, "NICK");
-			return;
-		}
-		if (tokens[1].compare(_password)) {
+		} else if (tokens[0].compare("PASS") || tokens[1].compare(_password)) {
 			sendMessage(cfd, ERR_PASSWDMISMATCH, "");
+			removeClient(cfd);
 			return;
 		}
 		_serverClients[cfd]->setPass(true);
 		return;
 	}
 	if (!_serverClients[cfd]->getName()) {
-		if (tokens[0].compare("NICK")) {
+		if (tokens[0].compare("NICK") || tokens.size() != 2) {
 			sendMessage(cfd, ERR_NEEDMOREPARAMS, "NICK");
-			return;
-		} else if (tokens.size() != 2) {
-			sendMessage(cfd, ERR_NEEDMOREPARAMS, "NICK");
+			removeClient(cfd);
 			return;
 		}
-		addNickname(cfd, tokens[1]);
+		cmdNick(cfd, tokens);
+		if (!_serverClients[cfd]->getName()) {
+			std::cout << "Client [" << cfd << "] : disconnected (wrong nick params)" << std::endl;
+			removeClient(cfd);
+			return;
+		}
 		return;
 	}
 	else {
-		if (tokens[0].compare("USER")) {
+		if (tokens[0].compare("USER") || tokens.size() < 2) {
 			sendMessage(cfd, ERR_NEEDMOREPARAMS, "USER");
-			return;
-		} else if (tokens.size() < 2) {
-			sendMessage(cfd, ERR_NEEDMOREPARAMS, "USER");
+			std::cout << "Client [" << cfd << "] : disconnected (wrong user params)" << std::endl;
+			removeClient(cfd);
 			return;
 		}
-		if (!(tokens[1].compare("\0")))
-			_serverClients[cfd]->setNickname("Guest");
-		else
-			_serverClients[cfd]->setUsername(tokens[1]);
+		cmdUser(cfd, tokens);
 	}
 	sendMessage(cfd, RPL_WELCOME, "");
 	_serverClients[cfd]->setAuthorized(true);

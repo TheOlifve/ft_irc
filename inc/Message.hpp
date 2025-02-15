@@ -6,6 +6,12 @@
 #define RPL_JOINCHANNEL			002
 #define RPL_PART				003
 #define RPL_MODE				004
+#define RPL_QUIT				005
+#define RPL_NICK				006
+#define RPL_PING				007
+#define RPL_LISTSTART			321
+#define RPL_LIST				322
+#define RPL_LISTEND				323
 #define RPL_TOPIC				332
 #define RPL_NOTOPIC				331
 #define RPL_NAMREPLY			353
@@ -20,6 +26,5 @@
 #define ERR_PASSWDMISMATCH		464
 #define ERR_NEEDMOREPARAMS		461
 #define RPL_HELPTXT				705
-
 
 # endif

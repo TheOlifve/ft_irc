@@ -1,8 +1,8 @@
 #include "Client.hpp"
 
-Client::Client(): _userFd(-1), _username(""), _nickname(""), _op(false), _authorized(false), _pass(false), _channel("\0") {}
+Client::Client(): _userFd(-1), _username("\0"), _nickname("\0"), _op(false), _authorized(false), _pass(false), _channel("\0") {}
 
-Client::Client(int userFd): _userFd(userFd), _username(""), _nickname(""), _op(false), _authorized(false), _pass(false), _channel("\0") {}
+Client::Client(int userFd): _userFd(userFd), _username("\0"), _nickname("\0"), _op(false), _authorized(false), _pass(false), _channel("\0") {}
 
 Client::~Client() {}
 

@@ -6,10 +6,18 @@ void	Server::sendMessage(const int &cfd, const int code, const std::string token
 
 	switch (code)
 	{
-		case RPL_HELPTXT:
-			text = ":ft_irc 705 ";
+		case RPL_WELCOME:
+			text = ":ft_irc 001 ";
 			text.append(_serverClients[cfd]->getNickname());
-			text.append(" :");
+			text.append(" :Welcome to the Internet Relay Network\r\n");
+			std::cout << "Client " << _serverClients[cfd]->getNickname() << "[" << cfd << "] : connected to the server." << std::endl;
+			break;
+		case RPL_JOINCHANNEL:
+			text = ":";
+			text.append(_serverClients[cfd]->getNickname());
+			text.append("!");
+			text.append(_serverClients[cfd]->getUsername());
+			text.append("@ft_irc JOIN :");
 			text.append(token);
 			text.append("\r\n");
 			break;
@@ -24,18 +32,17 @@ void	Server::sendMessage(const int &cfd, const int code, const std::string token
 			text.append(token);
 			text.append("\r\n");
 			break;
-		case RPL_WELCOME:
-			text = ":ft_irc 001 ";
+		case RPL_QUIT:
+			text = "ERROR :Closing link: (";
 			text.append(_serverClients[cfd]->getNickname());
-			text.append(" :Welcome to the Internet Relay Network\r\n");
-			std::cout << "Client " << _serverClients[cfd]->getNickname() << "[" << cfd << "] : connected to the server." << std::endl;
+			text.append(") [Quit: ");
+			text.append(token);
+			text.append("]\r\n");
 			break;
-		case RPL_JOINCHANNEL:
-			text = ":";
+		case RPL_HELPTXT:
+			text = ":ft_irc 705 ";
 			text.append(_serverClients[cfd]->getNickname());
-			text.append("!");
-			text.append(_serverClients[cfd]->getUsername());
-			text.append("@ft_irc JOIN ");
+			text.append(" :");
 			text.append(token);
 			text.append("\r\n");
 			break;
@@ -54,6 +61,23 @@ void	Server::sendMessage(const int &cfd, const int code, const std::string token
 			text.append(" ");
 			text.append(_serverClients[cfd]->getChannel());
 			text.append(" :No topic is set\r\n");
+			break;
+		case RPL_LISTSTART:
+			text = ":ft_irc 321 ";
+			text.append(_serverClients[cfd]->getNickname());
+			text.append(" Channel :Users Topic\r\n");
+			break;
+		case RPL_LIST:
+			text = ":ft_irc 322 ";
+			text.append(_serverClients[cfd]->getNickname());
+			text.append(" ");
+			text.append(token);
+			text.append("\r\n");
+			break;
+		case RPL_LISTEND:
+			text = ":ft_irc 323 ";
+			text.append(_serverClients[cfd]->getNickname());
+			text.append(" :End of /LIST\r\n");
 			break;
 		case RPL_NAMREPLY:
 			text = ":ft_irc 353 ";
@@ -78,12 +102,6 @@ void	Server::sendMessage(const int &cfd, const int code, const std::string token
 			text.append(token);
 			text.append("\r\n");
 			break;
-		// case RPL_NAMREPLY:
-		// 	text = ":ft_irc 353 Olifve = #CH1 :@Olifve\r\n";
-		// 	break;
-		// case RPL_ENDOFNAMES:
-		// 	text = ":ft_irc 366 Olifve #CH1 :End of /NAMES list\r\n";
-		// 	break;
 		case ERR_SERVICESFULL:
 			text = ":ft_irc 471 * :Cannot join, server is full\r\n";
 			std::cout<< "Client [" << cfd << "] : connection failed (server is full).\n";
@@ -121,7 +139,7 @@ void	Server::sendMessage(const int &cfd, const int code, const std::string token
 			break;
 		case ERR_PASSWDMISMATCH:
 			text = ":ft_irc 464 * :Password incorrect\r\n";
-			std::cout << "Client [" << cfd << "] :Password incorrect." << std::endl;
+			std::cout << "Client [" << cfd << "] : disconnected (incorrect password)" << std::endl;
 			break;
 		case ERR_NEEDMOREPARAMS:
 			text = ":ft_irc 461 * ";
@@ -135,9 +153,12 @@ void	Server::sendMessage(const int &cfd, const int code, const std::string token
 			text.append(token);
 			text.append(" :Cannot join channel (+k)\r\n");
 			break;
+		case RPL_PING:
+			text = "PING ft_irc\r\n";
+			break;
 		default:
 			break;
 	}
-	std::cout << "Send to client - " << text;
+	std::cout << "To client [" << cfd << "] - " << text;
 	send(cfd, text.c_str(), text.length(), 0);
 }

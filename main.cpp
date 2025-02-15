@@ -7,6 +7,14 @@ int	main(int argc, char **argv) {
 	}
 	Server serv(atoi(argv[1]), argv[2], 2);
 
-	serv.startServer();
-	return 0;
+	if (serv.getListening() == false)
+		return (1);
+	try {
+		serv.startServer();
+	}
+	catch(const std::exception& e) {
+		std::cerr << e.what() << std::endl;
+		return (1);
+	}
+	return (0);
 }

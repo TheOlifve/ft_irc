@@ -16,28 +16,26 @@ class Server {
 		void	startServer(void);
 		void	createSocket(void);
 		void	newConnection(void);
+		void	cmdPing(const int &);
+		void	message(const int &, const std::vector<std::string> &);
 		void	cmdHelp(const int &, const std::vector<std::string> &);
 		void	cmdPart(const int &, const std::vector<std::string> &);
 		void	cmdQuit(const int &, const std::vector<std::string> &);
-		void	cmdChannels(const int &, const std::vector<std::string> &);
 		void	cmdJoin(const int &, const std::vector<std::string> &);
+		void	cmdList(const int &, const std::vector<std::string> &);
 		void	cmdMode(const int &, const std::vector<std::string> &);
-		void	cmdExit(const int &, const std::vector<std::string> &);
-		void	message(const int &, const std::vector<std::string> &);
-		void	cmdChangeUsername(const int &, const std::vector<std::string> &);
-		void	cmdChangeNickname(const int &, const std::vector<std::string> &);
-		void	cmdStatus(const int &cfd, const std::vector<std::string> &tokens);
-		void	parseMode(const int &cfd, const std::vector<std::string> &tokens, bool condition);
+		void	cmdUser(const int &, const std::vector<std::string> &);
+		void	cmdNick(const int &, const std::vector<std::string> &);
+		void	cmdStatus(const int &, const std::vector<std::string> &);
+		void	parseMode(const int &, const std::vector<std::string> &, bool);
 		void	removeClient(int);
-		void	clientSignIn(int);
 		void	clientInput(int);
 		void	assignOperator(const std::vector<std::string> &);
 		void	cmdParsing(const int &, const std::vector<std::string> &);
 		void	authorization(const int &, const std::vector<std::string> &);;
-		void	addNickname(const int &, const std::string &);
-		void	listAll(const std::vector<std::string> &);
-		void	serverCmdParsing(const std::string &);
 		void	sendMessage(const int &, const int, const std::string);
+
+		bool	getListening(void) const;
 	private:
 		std::string							_name;
 		int									_port;
@@ -50,10 +48,11 @@ class Server {
 		std::map<int, Client *>				_serverClients;
 		std::map<std::string, int>			_ClientsID;
 		std::map<std::string, Channel *>	_serverChannels;
+		bool								_listening;
 };
 
-void	replaceWhiteSpaces(std::string &str);
-std::string	itos(int number);
+void						replaceWhiteSpaces(std::string &str);
+std::string					itos(int number);
 std::vector<std::string>	split(std::string str);
 
 # endif
