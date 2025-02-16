@@ -1,15 +1,11 @@
 #include "Channel.hpp"
 
 Channel::Channel(): _name("\0"), _key("\0"), _topic("\0"), _limit(0), _online(0)\
-					, _users(), _ops(), _i(false), _t(false), _k(false), _o(false), _l(false) {}
+					, _users(), _ops(), _i(false), _t(false), _k(false), _o(false), _l(false),
+					_modes() {}
 
-Channel::Channel(std::string name, std::string key): _name(name), _key(key), _topic("\0"), _limit(0), _online(0), _users(), _ops(){
-	_i = false;
-	_t = false;
-	_k = false;
-	_o = false;
-	_l = false;
-}
+Channel::Channel(std::string name, std::string key): _name(name), _key(key), _topic("\0"), _limit(0), _online(0), _users(), _ops(),
+					_i(false), _t(false), _k(false), _o(false), _l(false), _modes() {}
 
 void	Channel::channelMessage(const Client &client, const int code, const std::string token) {
 	int													cfd = client.getUserFd();
@@ -207,4 +203,31 @@ std::string	Channel::getTopic(void) const {
 	if (_topic.empty())
 		return "";
 	return _topic;
+}
+
+void Channel::setMode(char mode, bool add, const std::string &param) {
+    switch (mode) {
+        case 'i':
+            _modes.invite_only = add;
+            setI(add);
+            break;
+        case 't':
+            _modes.topic_restricted = add;
+            setT(add);
+            break;
+        case 'k':
+            _modes.key_required = add;
+            setK(add);
+            if (add) setKey(param);
+            break;
+        case 'l':
+            _modes.user_limit = add;
+            setL(add);
+            if (add) setLimit(std::atoi(param.c_str()));
+            break;
+        case 'o':
+            // Handle op status using existing methods
+            setO(add);
+            break;
+    }
 }

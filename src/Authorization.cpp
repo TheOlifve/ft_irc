@@ -23,43 +23,81 @@ If any step fails, the client is disconnected.
 */
 
 void	Server::authorization(const int &cfd, const std::vector<std::string> &tokens) {
+	// NICK and USER can come in any order before PASS
 	if (!_serverClients[cfd]->getPass()) {
-		if (tokens.size() != 2) {
-			sendMessage(cfd, ERR_NEEDMOREPARAMS, "PASS");
-			std::cout << "Client [" << cfd << "] : disconnected (wrong pass params)" << std::endl;
-			removeClient(cfd);
-			return;
-		} else if (tokens[0].compare("PASS") || tokens[1].compare(_password)) {
-			sendMessage(cfd, ERR_PASSWDMISMATCH, "");
-			removeClient(cfd);
-			return;
+		if (tokens[0] == "PASS") {
+			if (tokens.size() < 2) {
+				sendMessage(cfd, ERR_NEEDMOREPARAMS, "PASS");
+				return;
+			}
+			if (tokens[1] != _password) {
+				sendMessage(cfd, ERR_PASSWDMISMATCH, "");
+				removeClient(cfd);
+				return;
+			}
+			_serverClients[cfd]->setPass(true);
 		}
-		_serverClients[cfd]->setPass(true);
-		return;
-	}
-	if (!_serverClients[cfd]->getName()) {
-		if (tokens[0].compare("NICK") || tokens.size() != 2) {
-			sendMessage(cfd, ERR_NEEDMOREPARAMS, "NICK");
-			removeClient(cfd);
-			return;
+		else if (tokens[0] == "NICK") {
+			handleNick(cfd, tokens);
 		}
-		cmdNick(cfd, tokens);
-		if (!_serverClients[cfd]->getName()) {
-			std::cout << "Client [" << cfd << "] : disconnected (wrong nick params)" << std::endl;
-			removeClient(cfd);
-			return;
+		else if (tokens[0] == "USER") {
+			handleUser(cfd, tokens);
 		}
 		return;
 	}
-	else {
-		if (tokens[0].compare("USER") || tokens.size() < 2) {
-			sendMessage(cfd, ERR_NEEDMOREPARAMS, "USER");
-			std::cout << "Client [" << cfd << "] : disconnected (wrong user params)" << std::endl;
-			removeClient(cfd);
-			return;
-		}
-		cmdUser(cfd, tokens);
+
+	// Once we have all required info, send welcome messages
+	if (_serverClients[cfd]->getPass() && 
+		_serverClients[cfd]->getName() && 
+		_serverClients[cfd]->getUsername() != "\0") {
+		
+		sendMessage(cfd, RPL_WELCOME, "");
+		sendMessage(cfd, RPL_YOURHOST, "");
+		sendMessage(cfd, RPL_CREATED, "");
+		sendMessage(cfd, RPL_MYINFO, "");
+		// Send MOTD
+		sendMessage(cfd, RPL_MOTDSTART, "");
+		sendMessage(cfd, RPL_MOTD, "Welcome to ft_irc!");
+		sendMessage(cfd, RPL_ENDOFMOTD, "");
+		
+		_serverClients[cfd]->setAuthorized(true);
 	}
-	sendMessage(cfd, RPL_WELCOME, "");
-	_serverClients[cfd]->setAuthorized(true);
+}
+
+void Server::handleNick(const int &cfd, const std::vector<std::string> &tokens) {
+	if (tokens.size() < 2) {
+		sendMessage(cfd, ERR_NONICKNAMEGIVEN, "");
+		return;
+	}
+	
+	std::string nickname = tokens[1];
+	
+	// Check if nickname is already in use
+	if (_ClientsID.find(nickname) != _ClientsID.end()) {
+		sendMessage(cfd, ERR_NICKNAMEINUSE, nickname);
+		return;
+	}
+	
+	// Set the nickname
+	_serverClients[cfd]->setNickname(nickname);
+	_serverClients[cfd]->setName(true);
+	_ClientsID[nickname] = cfd;
+}
+
+void Server::handleUser(const int &cfd, const std::vector<std::string> &tokens) {
+	if (tokens.size() < 5) {  // USER requires 4 parameters
+		sendMessage(cfd, ERR_NEEDMOREPARAMS, "USER");
+		return;
+	}
+	
+	if (_serverClients[cfd]->getUsername() != "\0") {
+		sendMessage(cfd, ERR_ALREADYREGISTERED, "");
+		return;
+	}
+	
+	// tokens[1] = username
+	// tokens[2] = hostname
+	// tokens[3] = servername
+	// tokens[4] = realname (can contain spaces)
+	_serverClients[cfd]->setUsername(tokens[1]);
 }

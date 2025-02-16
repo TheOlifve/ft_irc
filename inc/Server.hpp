@@ -16,7 +16,7 @@ class Server {
 		void	startServer(void);
 		void	createSocket(void);
 		void	newConnection(void);
-		void	cmdPing(const int &);
+		void	cmdPing(const int &cfd, const std::vector<std::string> &tokens);
 		void	message(const int &, const std::vector<std::string> &);
 		void	cmdHelp(const int &, const std::vector<std::string> &);
 		void	cmdPart(const int &, const std::vector<std::string> &);
@@ -32,11 +32,13 @@ class Server {
 		void	clientInput(int);
 		void	assignOperator(const std::vector<std::string> &);
 		void	cmdParsing(const int &, const std::vector<std::string> &);
-		void	authorization(const int &, const std::vector<std::string> &);;
-		void	sendMessage(const int &, const int, const std::string);
-        void    cmdKick(const int &, const std::vector<std::string> &);
-        void    cmdInvite(const int &, const std::vector<std::string> &);
-        void    cmdTopic(const int &, const std::vector<std::string> &);
+		void	authorization(const int &, const std::vector<std::string> &);
+		void	sendMessage(const int &cfd, const int code, const std::string token);
+		void	cmdKick(const int &, const std::vector<std::string> &);
+		void	cmdInvite(const int &, const std::vector<std::string> &);
+		void	cmdTopic(const int &, const std::vector<std::string> &);
+		void	handleNick(const int &cfd, const std::vector<std::string> &tokens);
+		void	handleUser(const int &cfd, const std::vector<std::string> &tokens);
 
 		bool	getListening(void) const;
 	private:

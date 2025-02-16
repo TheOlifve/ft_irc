@@ -5,6 +5,16 @@
 
 class Client;
 
+struct ChannelModes {
+	bool invite_only;
+	bool topic_restricted;
+	bool key_required;
+	bool user_limit;
+	
+	ChannelModes() : invite_only(false), topic_restricted(false), 
+					 key_required(false), user_limit(false) {}
+};
+
 class Channel {
 	public:
 		Channel();
@@ -24,6 +34,7 @@ class Channel {
 		void								setLimit(int);
 		void								setOp(const int &, const Client *);
 		void 								setTopic(const std::string &topic);
+		void								setMode(char mode, bool add, const std::string &param);
 
 		int									getLimit(void) const;
 		int									getOnline(void) const;
@@ -50,6 +61,7 @@ class Channel {
 		bool								_k;
 		bool								_o;
 		bool								_l;
+		ChannelModes _modes;
 };
 
 # endif

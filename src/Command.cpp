@@ -154,8 +154,15 @@ void	Server::cmdPart(const int &cfd, const std::vector<std::string> &tokens) {
 	_serverClients[cfd]->setChannel("\0");
 }
 
-void	Server::cmdPing(const int &cfd) {
-	sendMessage(cfd, RPL_PING, "\0");
+void	Server::cmdPing(const int &cfd, const std::vector<std::string> &tokens) {
+	if (tokens.size() < 2) {
+		sendMessage(cfd, ERR_NEEDMOREPARAMS, "PING");
+		return;
+	}
+	
+	// Reply with PONG message
+	std::string response = ":ft_irc.local PONG ft_irc.local :" + tokens[1] + "\r\n";
+	send(cfd, response.c_str(), response.length(), 0);
 }
 
 void	Server::cmdParsing(const int &cfd, const std::vector<std::string> &tokens) {
@@ -178,7 +185,7 @@ void	Server::cmdParsing(const int &cfd, const std::vector<std::string> &tokens) 
 	else if (!tokens[0].compare("NICK"))
 		cmdNick(cfd, tokens);
 	else if (!tokens[0].compare("PONG"))
-		cmdPing(cfd);
+		cmdPing(cfd, tokens);
 	else if (!tokens[0].compare("KICK"))
         cmdKick(cfd, tokens);
     else if (!tokens[0].compare("INVITE"))
