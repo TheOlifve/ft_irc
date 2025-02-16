@@ -194,7 +194,7 @@ void	Server::sendMessage(const int &cfd, const int code, const std::string token
 			text.append(_serverClients[cfd]->getNickname());
 			text.append(" ");
 			text.append(token);
-			text = " :Too many recipients\r\n";
+			text.append(" :Too many recipients\r\n");
 			break;
 		case RPL_PRIVMSG:
 			text = ":";
@@ -203,7 +203,6 @@ void	Server::sendMessage(const int &cfd, const int code, const std::string token
 			text.append(_serverClients[cfd]->getUsername());
 			text.append("@ft_irc PRIVMSG ");
 			text.append(token);
-			std::cout << "Text - " << text << std::endl;
 			text.append("\r\n");
 			send(_ClientsID[token.substr(0, token.find(' '))], text.c_str(), text.length(), 0);
 			return;
