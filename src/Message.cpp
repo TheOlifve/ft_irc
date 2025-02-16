@@ -11,23 +11,19 @@ void	Server::sendMessage(const int &cfd, const int code, const std::string token
 	std::string	text;
 	std::string	prefix = ":ft_irc.local ";
 	std::string	nick = _serverClients[cfd]->getNickname();
+	char codeStr[4];
+	snprintf(codeStr, sizeof(codeStr), "%03d", code);
 
 	switch (code)
 	{
 		case RPL_WELCOME:
-			text = prefix + numericReply(code) + " " + nick + " :Welcome to the Internet Relay Network " + 
-				  nick + "!" + _serverClients[cfd]->getUsername() + "@ft_irc.local\r\n";
-			std::cout << "Client " << nick << "[" << cfd << "] : connected to the server." << std::endl;
-			break;
 		case RPL_YOURHOST:
-			text = prefix + numericReply(code) + " " + nick + " :Your host is ft_irc.local, running version 1.0\r\n";
-			break;
 		case RPL_CREATED:
-			text = prefix + numericReply(code) + " " + nick + " :This server was created " + 
-				  "sometime\r\n";
-			break;
 		case RPL_MYINFO:
-			text = prefix + numericReply(code) + " " + nick + " ft_irc.local 1.0 itkol\r\n";
+		case RPL_MOTD:
+		case RPL_MOTDSTART:
+		case RPL_ENDOFMOTD:
+			text = prefix + codeStr + " " + nick + " :" + token + "\r\n";
 			break;
 		case RPL_JOINCHANNEL:
 			text = prefix + numericReply(code) + " " + nick + " JOIN :" + token + "\r\n";
@@ -57,11 +53,12 @@ void	Server::sendMessage(const int &cfd, const int code, const std::string token
 			text = prefix + numericReply(code) + " " + nick + " :End of /LIST\r\n";
 			break;
 		case RPL_NAMREPLY:
-			text = prefix + numericReply(code) + " " + nick + " = " + 
+			text = prefix + codeStr + " " + nick + " = " + 
 				  _serverClients[cfd]->getChannel() + " :" + token + "\r\n";
 			break;
 		case RPL_ENDOFNAMES:
-			text = prefix + numericReply(code) + " " + nick + " " + _serverClients[cfd]->getChannel() + " :End of /NAMES list\r\n";
+			text = prefix + codeStr + " " + nick + " " + 
+				  _serverClients[cfd]->getChannel() + " :End of /NAMES list\r\n";
 			break;
 		case RPL_MODE:
 			text = prefix + numericReply(code) + " " + _serverClients[cfd]->getChannel() + " " + token + "\r\n";
@@ -111,6 +108,9 @@ void	Server::sendMessage(const int &cfd, const int code, const std::string token
 		default:
 			break;
 	}
-	std::cout << "To client [" << cfd << "] - " << text;
-	send(cfd, text.c_str(), text.length(), 0);
+	
+	if (!text.empty()) {
+		std::cout << "To client [" << cfd << "] - " << text;
+		send(cfd, text.c_str(), text.length(), 0);
+	}
 }

@@ -310,42 +310,63 @@ std::vector<std::string> split(std::string str) {
 }
 
 void	Server::cmdJoin(const int &cfd, const std::vector<std::string> &tokens) {
-	if (!(tokens.size() == 3 || tokens.size() == 2)) {
+	if (tokens.size() < 2) {
 		sendMessage(cfd, ERR_NEEDMOREPARAMS, "JOIN");
 		return;
 	}
-	if (_serverChannels.find(tokens[1]) == _serverChannels.end())
+	
+	std::string channelName = tokens[1];
+	if (channelName[0] != '#') {
+		channelName = "#" + channelName;
+	}
+	
+	if (_serverChannels.find(channelName) == _serverChannels.end())
 		if (createChannel(cfd, tokens))
 			return;
-	if (_serverClients[cfd]->getChannel() == tokens[1]) {
-		sendMessage(cfd, ERR_USERONCHANNEL, tokens[1]);
+
+	Channel* channel = _serverChannels[channelName];  // Get channel pointer
+	
+	if (_serverClients[cfd]->getChannel() == channelName) {
+		sendMessage(cfd, ERR_USERONCHANNEL, channelName);
 		return;
 	}
-	if (_serverChannels[tokens[1]]->getK() == true && tokens.size() != 3) {
-		sendMessage(cfd, ERR_BADCHANNELKEY, tokens[1]);
+	if (channel->getK() == true && tokens.size() != 3) {
+		sendMessage(cfd, ERR_BADCHANNELKEY, channelName);
 		return;
 	}
-	if (_serverChannels[tokens[1]]->getK() == false && tokens.size() != 2) {
+	if (channel->getK() == false && tokens.size() != 2) {
 		sendMessage(cfd, ERR_NEEDMOREPARAMS, "JOIN");
 		return;
 	}
-	if (_serverChannels[tokens[1]]->getK() == true &&
-			_serverChannels[tokens[1]]->getKey().compare(tokens[2])) {
-		sendMessage(cfd, ERR_BADCHANNELKEY, tokens[1]);
+	if (channel->getK() == true &&
+			channel->getKey().compare(tokens[2])) {
+		sendMessage(cfd, ERR_BADCHANNELKEY, channelName);
 		return;
 	}
 	if (_serverClients[cfd]->getChannel() != "\0") {
 		_serverClients[cfd]->setOp(false);
 		_serverChannels[_serverClients[cfd]->getChannel()]->removeClientCh(cfd);
 	}
-	_serverClients[cfd]->setChannel(tokens[1]);
-	_serverChannels[tokens[1]]->joinChannel(*_serverClients[cfd], tokens);
-	sendMessage(cfd, RPL_JOINCHANNEL, tokens[1]);
-	if (_serverChannels[tokens[1]]->getT() == true)
-		sendMessage(cfd, RPL_TOPIC, _serverChannels[tokens[1]]->getTopic());
-	else
-		sendMessage(cfd, RPL_NOTOPIC, "");
-	sendMessage(cfd, RPL_NAMREPLY, _serverChannels[tokens[1]]->usersList());
+	_serverClients[cfd]->setChannel(channelName);
+	channel->joinChannel(*_serverClients[cfd], tokens);
+	
+	// After successful join:
+	// 1. Send join confirmation to all channel members
+	std::string joinMsg = ":" + _serverClients[cfd]->getNickname() + "!" + 
+						 _serverClients[cfd]->getUsername() + "@ft_irc.local JOIN :" + 
+						 channelName + "\r\n";
+	// Send to all channel members
+	
+	// 2. Send topic if it exists
+	if (!channel->getTopic().empty()) {
+		sendMessage(cfd, RPL_TOPIC, channel->getTopic());
+	}
+	
+	// 3. Send names list
+	std::string names = channel->usersList();
+	if (!names.empty()) {
+		sendMessage(cfd, RPL_NAMREPLY, names);
+	}
 	sendMessage(cfd, RPL_ENDOFNAMES, "");
 }
 

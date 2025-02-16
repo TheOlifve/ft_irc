@@ -23,44 +23,48 @@ If any step fails, the client is disconnected.
 */
 
 void	Server::authorization(const int &cfd, const std::vector<std::string> &tokens) {
-	// NICK and USER can come in any order before PASS
-	if (!_serverClients[cfd]->getPass()) {
-		if (tokens[0] == "PASS") {
-			if (tokens.size() < 2) {
-				sendMessage(cfd, ERR_NEEDMOREPARAMS, "PASS");
-				return;
-			}
-			if (tokens[1] != _password) {
-				sendMessage(cfd, ERR_PASSWDMISMATCH, "");
-				removeClient(cfd);
-				return;
-			}
-			_serverClients[cfd]->setPass(true);
+	// NICK and USER can come in any order, but both are needed before sending welcome
+	if (tokens[0] == "PASS") {
+		if (tokens.size() < 2) {
+			sendMessage(cfd, ERR_NEEDMOREPARAMS, "PASS");
+			return;
 		}
-		else if (tokens[0] == "NICK") {
-			handleNick(cfd, tokens);
+		if (tokens[1] != _password) {
+			sendMessage(cfd, ERR_PASSWDMISMATCH, "");
+			removeClient(cfd);
+			return;
 		}
-		else if (tokens[0] == "USER") {
-			handleUser(cfd, tokens);
-		}
-		return;
+		_serverClients[cfd]->setPass(true);
+	}
+	else if (tokens[0] == "NICK") {
+		handleNick(cfd, tokens);
+	}
+	else if (tokens[0] == "USER") {
+		handleUser(cfd, tokens);
 	}
 
-	// Once we have all required info, send welcome messages
+	// Send welcome sequence once we have all required info
 	if (_serverClients[cfd]->getPass() && 
 		_serverClients[cfd]->getName() && 
-		_serverClients[cfd]->getUsername() != "\0") {
+		_serverClients[cfd]->getUsername() != "\0" &&
+		!_serverClients[cfd]->getAuthorized()) {
 		
-		sendMessage(cfd, RPL_WELCOME, "");
-		sendMessage(cfd, RPL_YOURHOST, "");
-		sendMessage(cfd, RPL_CREATED, "");
-		sendMessage(cfd, RPL_MYINFO, "");
+		std::string nick = _serverClients[cfd]->getNickname();
+		std::string user = _serverClients[cfd]->getUsername();
+		
+		// Send welcome messages
+		sendMessage(cfd, RPL_WELCOME, "Welcome to the Internet Relay Network " + nick + "!" + user + "@ft_irc.local");
+		sendMessage(cfd, RPL_YOURHOST, "Your host is ft_irc.local, running version 1.0");
+		sendMessage(cfd, RPL_CREATED, "This server was created today");
+		sendMessage(cfd, RPL_MYINFO, "ft_irc.local 1.0 itkol mtov");
+		
 		// Send MOTD
-		sendMessage(cfd, RPL_MOTDSTART, "");
+		sendMessage(cfd, RPL_MOTDSTART, "- ft_irc Message of the Day -");
 		sendMessage(cfd, RPL_MOTD, "Welcome to ft_irc!");
-		sendMessage(cfd, RPL_ENDOFMOTD, "");
+		sendMessage(cfd, RPL_ENDOFMOTD, "End of /MOTD command");
 		
 		_serverClients[cfd]->setAuthorized(true);
+		std::cout << "Client " << nick << "[" << cfd << "] : fully registered and authorized" << std::endl;
 	}
 }
 
