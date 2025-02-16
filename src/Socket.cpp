@@ -11,7 +11,11 @@ void	Server::createSocket(void) {
 		std::cout << "ERROR: Socket creation failed.\n";
 		return;
 	}
-
+	if (fcntl(_serverSocket, F_SETFL, O_NONBLOCK) == -1) {
+		close(_serverSocket);
+		std::cout << "Server fcntl failed\n";
+		return;
+	}
 	if (setsockopt(_serverSocket, SOL_SOCKET, SO_REUSEADDR, &tmp, sizeof(tmp)) == -1) {
 		close(_serverSocket);
 		std::cout << "ERROR: Setsockopt failed.\n";

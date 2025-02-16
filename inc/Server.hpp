@@ -17,7 +17,6 @@ class Server {
 		void	createSocket(void);
 		void	newConnection(void);
 		void	cmdPing(const int &);
-		void	message(const int &, const std::vector<std::string> &);
 		void	cmdHelp(const int &, const std::vector<std::string> &);
 		void	cmdPart(const int &, const std::vector<std::string> &);
 		void	cmdQuit(const int &, const std::vector<std::string> &);
@@ -27,6 +26,7 @@ class Server {
 		void	cmdUser(const int &, const std::vector<std::string> &);
 		void	cmdNick(const int &, const std::vector<std::string> &);
 		void	cmdStatus(const int &, const std::vector<std::string> &);
+		void	cmdPrivmsg(const int &, const std::vector<std::string> &);
 		void	parseMode(const int &, const std::vector<std::string> &, bool);
 		void	removeClient(int);
 		void	clientInput(int);
@@ -54,5 +54,6 @@ class Server {
 void						replaceWhiteSpaces(std::string &str);
 std::string					itos(int number);
 std::vector<std::string>	split(std::string str);
+const std::string			buildMessage(const int from, const std::vector<std::string> &tokens);
 
 # endif

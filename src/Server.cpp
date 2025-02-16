@@ -72,6 +72,11 @@ void	Server::newConnection(void) {
 		std::cout << "Client connection failed\n";
 		return ;
 	}
+	if (fcntl(cfd, F_SETFL, O_NONBLOCK) == -1) {
+		std::cout << "Client [" << cfd << "] fcntl failed\n";
+		close(cfd);
+		return;
+	}
 	if (_currentOnline == _maxOnline) {
 		sendMessage(cfd, ERR_SERVICESFULL, "");
 		close (cfd);

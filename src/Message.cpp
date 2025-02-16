@@ -156,6 +156,57 @@ void	Server::sendMessage(const int &cfd, const int code, const std::string token
 		case RPL_PING:
 			text = "PING ft_irc\r\n";
 			break;
+		case ERR_UNKNOWNCOMMAND:
+			text = ":ft_irc 421 ";
+			text.append(_serverClients[cfd]->getNickname());
+			text.append(" ");
+			text.append	(token);
+			text.append(" :Unknown command\r\n");
+			break;
+		case ERR_NORECIPIENT:
+			text = ":ft_irc 411 ";
+			text.append(_serverClients[cfd]->getNickname());
+			text.append(" :No recipient given (PRIVMSG)\r\n");
+			break;
+		case ERR_NOSUCHNICK:
+			text = ":ft_irc 401 ";
+			text.append(_serverClients[cfd]->getNickname());
+			text.append(" ");
+			text.append(token);
+			text.append(" :No such nick/channel\r\n");
+			break;
+		case ERR_USERNOTINCHANNEL:
+			text = ":ft_irc 441 ";
+			text.append(_serverClients[cfd]->getNickname());
+			text.append(" ");
+			text.append(token);
+			text.append(" ");
+			text.append(_serverClients[cfd]->getChannel());
+			text.append(" :They aren't on that channel\r\n");
+			break;
+		case ERR_NOTEXTTOSEND:
+			text = ":ft_irc 412 ";
+			text.append(_serverClients[cfd]->getNickname());
+			text.append(" :No text to send\r\n");
+			break;
+		case ERR_TOOMANYTARGETS:
+			text = ":ft_irc 417 ";
+			text.append(_serverClients[cfd]->getNickname());
+			text.append(" ");
+			text.append(token);
+			text = " :Too many recipients\r\n";
+			break;
+		case RPL_PRIVMSG:
+			text = ":";
+			text.append(_serverClients[cfd]->getNickname());
+			text.append("!");
+			text.append(_serverClients[cfd]->getUsername());
+			text.append("@ft_irc PRIVMSG ");
+			text.append(token);
+			std::cout << "Text - " << text << std::endl;
+			text.append("\r\n");
+			send(_ClientsID[token.substr(0, token.find(' '))], text.c_str(), text.length(), 0);
+			return;
 		default:
 			break;
 	}

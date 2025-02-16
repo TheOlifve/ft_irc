@@ -56,6 +56,15 @@ void	Channel::channelMessage(const Client &client, const int code, const std::st
 			text.append(client.getNickname());
 			text.append("\r\n");
 			break;
+		case RPL_PRIVMSG:
+			text = ":";
+			text.append(client.getNickname());
+			text.append("!");
+			text.append(client.getUsername());
+			text.append("@ft_irc PRIVMSG ");
+			text.append(token);
+			text.append("\r\n");
+			break;
 		default:
 			break;
 	}
