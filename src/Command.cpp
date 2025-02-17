@@ -11,6 +11,7 @@ void	Server::cmdHelp(const int &cfd, const std::vector<std::string> &tokens) {
 		text.append(", KICK, INVITE, TOPIC");
 	}
 	sendMessage(cfd, RPL_HELPTXT, text);
+	sendMessage(cfd, RPL_ENDOFHELP, text);
 }
 
 void	Server::cmdQuit(const int &cfd, const std::vector<std::string> &tokens) {
@@ -36,6 +37,14 @@ void	Server::cmdQuit(const int &cfd, const std::vector<std::string> &tokens) {
 void	Server::cmdUser(const int &cfd, const std::vector<std::string> &tokens) {
 	if (tokens.size() < 2) {
 		sendMessage(cfd, ERR_NEEDMOREPARAMS, "USER");
+		if (_serverClients[cfd]->getUsername() == "\0")
+			_serverClients[cfd]->setUsername("user");
+		return;
+	}
+	if (!nickValidation(tokens[1])) {
+		sendMessage(cfd, ERR_ERRONEUSUSERNAME, tokens[1]);
+		if (_serverClients[cfd]->getUsername() == "\0")
+			_serverClients[cfd]->setUsername("user");
 		return;
 	}
 	if (tokens[1] != "\0")
@@ -64,6 +73,16 @@ void	Server::cmdList(const int &cfd, const std::vector<std::string> &tokens) {
 	sendMessage(cfd, RPL_LISTEND, "");
 }
 
+bool	nickValidation(const std::string &token) {
+	std::string	all = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
+
+	for (size_t i = 0; i < token.size(); ++i) {
+		if (all.find(token[i]) == std::string::npos) {
+			return false;
+		}
+	}
+	return true;
+}
 
 void	Server::cmdNick(const int &cfd, const std::vector<std::string> &tokens) {
 	std::string	oldNick = "\0";
@@ -74,6 +93,10 @@ void	Server::cmdNick(const int &cfd, const std::vector<std::string> &tokens) {
 	}
 	if (_ClientsID.find(tokens[1]) != _ClientsID.end()) {
 		sendMessage(cfd, ERR_NICKNAMEINUSE, tokens[1]);
+		return;
+	}
+	if (!nickValidation(tokens[1])) {
+		sendMessage(cfd, ERR_ERRONEUSNICKNAME, tokens[1]);
 		return;
 	}
 	if (_serverClients[cfd]->getName() == true) {
@@ -126,10 +149,6 @@ void	Server::cmdPart(const int &cfd, const std::vector<std::string> &tokens) {
 	}
 	_serverClients[cfd]->setOp(false);
 	_serverClients[cfd]->setChannel("\0");
-}
-
-void	Server::cmdPing(const int &cfd) {
-	sendMessage(cfd, RPL_PING, "\0");
 }
 
 const std::string	buildMessage(const int from, const std::vector<std::string> &tokens) {

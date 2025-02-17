@@ -40,11 +40,16 @@ void	Server::sendMessage(const int &cfd, const int code, const std::string token
 			text.append("]\r\n");
 			break;
 		case RPL_HELPTXT:
-			text = ":ft_irc 705 ";
+			text = ":ft_irc 704 ";
 			text.append(_serverClients[cfd]->getNickname());
 			text.append(" :");
 			text.append(token);
 			text.append("\r\n");
+			break;
+		case RPL_ENDOFHELP:
+			text = ":ft_irc 705 ";
+			text.append(_serverClients[cfd]->getNickname());
+			text.append(" :End of HELP info\r\n");
 			break;
 		case RPL_TOPIC:
 			text = ":ft_irc 332 ";
@@ -154,7 +159,9 @@ void	Server::sendMessage(const int &cfd, const int code, const std::string token
 			text.append(" :Cannot join channel (+k)\r\n");
 			break;
 		case RPL_PING:
-			text = "PING ft_irc\r\n";
+			text = "PING :";
+			text.append(token);
+			text.append("\r\n");
 			break;
 		case ERR_UNKNOWNCOMMAND:
 			text = ":ft_irc 421 ";
@@ -206,6 +213,26 @@ void	Server::sendMessage(const int &cfd, const int code, const std::string token
 			text.append("\r\n");
 			send(_ClientsID[token.substr(0, token.find(' '))], text.c_str(), text.length(), 0);
 			return;
+		case ERR_ERRONEUSNICKNAME:
+			text = ":ft_irc 432 ";
+			if (!_serverClients[cfd]->getNickname().compare("\0"))
+				text.append("*");
+			else
+				text.append(_serverClients[cfd]->getNickname());
+			text.append(" ");
+			text.append(token);
+			text.append(" :Erroneous nickname\r\n");
+			break;
+		case ERR_ERRONEUSUSERNAME:
+			text = ":ft_irc 433 ";
+			if (!_serverClients[cfd]->getNickname().compare("\0"))
+				text.append("*");
+			else
+				text.append(_serverClients[cfd]->getNickname());
+			text.append(" ");
+			text.append(token);
+			text.append(" :Erroneous username\r\n");
+			break;
 		default:
 			break;
 	}
