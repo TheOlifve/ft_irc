@@ -1,13 +1,12 @@
 #include "Channel.hpp"
 
 Channel::Channel(): _name(""), _key(""), _topic(""), _limit(0), _online(0)\
-					, _users(), _ops(), _i(false), _t(false), _k(false), _o(false), _l(false) {}
+					, _users(), _ops(), _i(false), _t(false), _k(false), _l(false) {}
 
 Channel::Channel(std::string name, std::string key): _name(name), _key(key), _topic(""), _limit(0), _online(0), _users(), _ops(){
 	_i = false;
 	_t = false;
 	_k = false;
-	_o = false;
 	_l = false;
 }
 
@@ -76,10 +75,6 @@ void	Channel::setK(bool k) {
 	_k = k;
 }
 
-void	Channel::setO(bool o) {
-	_o = o;
-}
-
 void	Channel::setL(bool l) {
 	_l = l;
 }
@@ -89,8 +84,12 @@ void	Channel::setKey(std::string key)
 	_key = key;
 }
 
-void	Channel::setOp(const int &cfd, const Client *client) {
+void	Channel::addOp(const int &cfd, const Client *client) {
 	_ops.insert(std::pair<const int,const Client *>(cfd, client));
+}
+
+void	Channel::removeOp(const int &cfd) {
+	_ops.erase(cfd);
 }
 
 void	Channel::setLimit(int limit) {
@@ -115,10 +114,6 @@ bool	Channel::getT(void) const {
 
 bool	Channel::getK(void) const {
 	return _k;
-}
-
-bool	Channel::getO(void) const {
-	return _o;
 }
 
 bool	Channel::getL(void) const {
