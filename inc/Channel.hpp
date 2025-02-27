@@ -23,6 +23,7 @@ class Channel {
 		void								setKey(std::string);
 		void								setLimit(int);
 		void								setOp(const int &, const Client *);
+		void								removeOp(const int &);
 
 		int									getLimit(void) const;
 		int									getOnline(void) const;

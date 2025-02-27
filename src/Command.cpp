@@ -226,7 +226,7 @@ void	Server::cmdParsing(const int &cfd, const std::vector<std::string> &tokens) 
 	else if (!tokens[0].compare("PRIVMSG"))
 		cmdPrivmsg(cfd, tokens);
 	else if (!tokens[0].compare("MODE"))
-		;
+		cmdMode(cfd, tokens);
 	else if (!tokens[0].compare("PONG"))
 		;
 	else
@@ -411,35 +411,54 @@ void	Server::parseMode(const int &cfd, const std::vector<std::string> &tokens, b
 		if (condition && tokens.size() == 4)
 			_serverChannels[tokens[1].substr(1)]->setKey(tokens[3]);
 		else
-			_serverChannels[tokens[1].substr(1)]->setKey("\0");
+			_serverChannels[tokens[1].substr(1)]->setKey("");
 		if (condition)
 			send(cfd, "You have set the channel to be password protected.\n", 51, 0);
 		else
 			send(cfd, "You made the channel passwordless.\n", 35, 0);
 	}
-	else if (tokens[2][1] == 'o') { //seg
-		_serverChannels[tokens[1].substr(1)]->setO(condition);
+	else if (tokens[2][1] == 'o') {
+
+		if (!_ClientsID[tokens[3]]) {
+			send(cfd, "ERROR: User doesn't exist.\n", 27, 0);
+			return ;
+		}
+		else if( _serverChannels[tokens[1].substr(1)]->getUsers()[_ClientsID[tokens[3]]] == NULL) {
+			send(cfd, "ERROR: User is not in this channel.\n", 36, 0);
+			return ;
+		}
 		if (tokens.size() == 4) {
-			for (size_t i = 0; i < _serverChannels[tokens[1].substr(1)]->getUsers().size(); ++i) {
-				if (_serverChannels[tokens[1].substr(1)]->getUsers()[i]->getNickname() == tokens[3]) { //seg
-					_serverClients[_serverChannels[tokens[1].substr(1)]->getUsers()[i]->getUserFd()]->setOp(condition);
-					break;
-				}
-			}
-			if (condition)
+			if (condition) {
+				_serverChannels[tokens[1].substr(1)]->setOp(_ClientsID[tokens[3]], _serverClients[_ClientsID[tokens[3]]]);
 				send(cfd, "You have set the user to be an operator.\n", 41, 0);
-			else
+				send(_ClientsID[tokens[3]], "You have been assigned as operator in the channel ", 50, 0);
+				send(_ClientsID[tokens[3]], tokens[1].substr(1).c_str(), tokens[1].substr(1).size(), 0);
+				send(_ClientsID[tokens[3]], ".\n", 2, 0);
+			}
+			else {
+				if (_serverChannels[tokens[1].substr(1)]->getOps()[_ClientsID[tokens[3]]] == false) {
+					send(cfd, "ERROR: User is not an operator in this channel.\n", 48, 0);
+					return ;
+				}
+				_serverChannels[tokens[1].substr(1)]->removeOp(_ClientsID[tokens[3]]);
 				send(cfd, "You have removed the user from the operator list.\n", 50, 0);
+				send(_ClientsID[tokens[3]], "You have been removed from the operator list in the channel ", 60, 0);
+				send(_ClientsID[tokens[3]], tokens[1].substr(1).c_str(), tokens[1].substr(1).size(), 0);
+				send(_ClientsID[tokens[3]], ".\n", 2, 0);
+			}
 		}
 		else
 			send(cfd, "ERROR: Wrong number of parameters. Usage /MODE '#channel' '+/-o' 'username'.\n", 77, 0);
 	}
 	else if (tokens[2][1] == 'l') {
-		_serverChannels[tokens[1].substr(1)]->setL(condition);
-		if (tokens.size() == 4 && condition && atoi(tokens[3].c_str()) > 0)
+		if (tokens.size() == 4 && condition && atoi(tokens[3].c_str()) > 0) {
 			_serverChannels[tokens[1].substr(1)]->setLimit(atoi(tokens[3].c_str()));
-		else if (tokens.size() != 4)
-			send(cfd, "ERROR: Wrong number of parameters. Usage /MODE '#channel' '+/-l' 'limit'.\n", 77, 0);
+			_serverChannels[tokens[1].substr(1)]->setL(condition);
+		}
+		else if (tokens.size() != 4) {
+			send(cfd, "ERROR: Wrong number of parameters. Usage /MODE '#channel' '+/-l' 'limit'.\n", 74, 0);
+			return;
+		}
 		else
 			_serverChannels[tokens[1].substr(1)]->setLimit(0);
 		if (condition)
@@ -454,11 +473,11 @@ void	Server::parseMode(const int &cfd, const std::vector<std::string> &tokens, b
 void	Server::cmdMode(const int &cfd, const std::vector<std::string> &tokens) {
 	bool	condition;
 
-	if (_serverChannels[tokens[1].substr(1)]->getOps()[cfd] == NULL) {
+	if (tokens.size() > 1 && _serverChannels[tokens[1].substr(1)]->getOps()[cfd] == NULL) {
 		send(cfd, "ERROR: You don't have permission to change the mode.\n", 53, 0);
 		return ;
 	}
-	else if (_serverChannels[tokens[1].substr(1)]->getUsers()[cfd] == NULL) {
+	else if (tokens.size() > 1 && _serverChannels[tokens[1].substr(1)]->getUsers()[cfd] == NULL) {
 		send(cfd, "ERROR: You are not in this channel.\n", 36, 0);
 		return ;
 	}
@@ -480,7 +499,7 @@ void	Server::cmdMode(const int &cfd, const std::vector<std::string> &tokens) {
 	}
 
 }
-//change to send
+
 void	Server::cmdStatus(const int &cfd, const std::vector<std::string> &tokens) {
 	if (tokens.size() != 2 || tokens[1][0] != '#') {
 		send(cfd, "Wrong number of parameters: Usage /STATUS '#CHANNEL NAME'.\n", 59, 0);
@@ -494,26 +513,35 @@ void	Server::cmdStatus(const int &cfd, const std::vector<std::string> &tokens) {
 		send(cfd, "ERROR: You don't have permission to view the status.\n", 53, 0);
 		return ;
 	}
-	std::cout << "Current status of the channel " << tokens[1].substr(1) << ":\n";
-	std::cout << "Invite only: " << _serverChannels[tokens[1].substr(1)]->getI() << std::endl;
-	std::cout << "Topic set by operator: " << _serverChannels[tokens[1].substr(1)]->getT() << std::endl;
-	std::cout << "Channel topic: " << _serverChannels[tokens[1].substr(1)]->getTopic() << std::endl;
-	std::cout << "Password protected: " << _serverChannels[tokens[1].substr(1)]->getK() << std::endl;
-	// std::cout << "Operators: ";
-	// if (_serverChannels.size() && _serverChannels[tokens[1].substr(1)]) {
-	// 	std::map<const int, const Client *>::iterator it;
-	// 	for (it = _serverChannels[tokens[1].substr(1)]->getOps().begin(); it != _serverChannels[tokens[1].substr(1)]->getOps().end(); ++it)
-	// 		std::cout << it->second->getName() << " ";
-	// }
-	std::cout << std::endl;
-	std::cout << "User limit: " << _serverChannels[tokens[1].substr(1)]->getL() << std::endl;
-	// std::cout << "Current users: ";
-	// if (_serverChannels.size() && _serverChannels[tokens[1].substr(1)]) {
-	// 	std::map<const int, const Client *>::iterator it;
-	// 	for (it = _serverChannels[tokens[1].substr(1)]->getUsers().begin(); it != _serverChannels[tokens[1].substr(1)]->getUsers().end(); ++it)
-	// 		std::cout << it->second->getName() << " ";
-	// }
-	// std::cout << std::endl;
+	send(cfd, "Current status of the channel ", 31, 0);
+	send(cfd, tokens[1].substr(1).c_str(), tokens[1].substr(1).size(), 0);
+	send(cfd, ":\n", 2, 0);
+	send(cfd, "Invite only: ", 13, 0);
+	if (_serverChannels[tokens[1].substr(1)]->getI())
+		send(cfd, "true\n", 5, 0);
+	else
+		send(cfd, "false\n", 6, 0);
+	send(cfd, "Topic set by operator: ", 23, 0);
+	if (_serverChannels[tokens[1].substr(1)]->getT())
+		send(cfd, "true\n", 5, 0);
+	else
+		send(cfd, "false\n", 6, 0);
+	send(cfd, "Channel topic: ", 15, 0);
+	send(cfd, _serverChannels[tokens[1].substr(1)]->getTopic().c_str(), _serverChannels[tokens[1].substr(1)]->getTopic().size(), 0);
+	send(cfd, "\n", 1, 0);
+	send(cfd, "Password protected: ", 20, 0);
+	if (_serverChannels[tokens[1].substr(1)]->getK())
+		send(cfd, "true\n", 5, 0);
+	else
+		send(cfd, "false\n", 6, 0);
+	send(cfd, "User limit: ", 12, 0);
+	if (_serverChannels[tokens[1].substr(1)]->getL())
+		send(cfd, "true\n", 5, 0);
+	else
+		send(cfd, "false\n", 6, 0);
+	send(cfd, "Limit: ", 7, 0);
+	send(cfd, itos(_serverChannels[tokens[1].substr(1)]->getLimit()).c_str(), itos(_serverChannels[tokens[1].substr(1)]->getLimit()).size(), 0);
+	send(cfd, "\n", 1, 0);
 }
 
 void	Server::serverInput(void) {

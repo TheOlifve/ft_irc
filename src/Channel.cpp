@@ -159,10 +159,13 @@ void	Channel::setOp(const int &cfd, const Client *client) {
 	_ops.insert(std::pair<const int,const Client *>(cfd, client));
 }
 
+void	Channel::removeOp(const int &cfd) {
+	_ops.erase(cfd);
+}
+
 void	Channel::setLimit(int limit) {
 	_limit = limit;
 }
-
 
 int		Channel::getLimit(void) const {
 	return _limit;
