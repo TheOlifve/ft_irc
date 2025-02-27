@@ -1,0 +1,16 @@
+{
+    "version": "2.0.0",
+    "tasks": [
+        {
+            "label": "build",  // The label that can be referenced in the launch.json
+            "type": "shell",
+            "command": "make",  // The make command to run
+            "group": {
+                "kind": "build",
+                "isDefault": true
+            },
+            "problemMatcher": ["$gcc"],
+            "detail": "Generated task to run make"
+        }
+    ]
+}

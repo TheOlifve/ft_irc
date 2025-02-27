@@ -329,8 +329,6 @@ void	Server::sendMessage(const int &cfd, const int code, const std::string token
 		case ERR_MODEPARAMS:
 			text = ":ft_irc 745 ";
 			text.append(_serverClients[cfd]->getNickname());
-			text.append(" ");
-			text.append(token);
 			text.append(" :ERROR: Wrong number of parameters: Usage /MODE '#channel' '+/-mode' 'parameter'.\r\n");
 			break;
 		case ERR_KEYPARAMS:

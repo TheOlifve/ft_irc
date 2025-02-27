@@ -290,6 +290,7 @@ int	Server::createChannel(const int &cfd, const std::vector<std::string> &tokens
 		_serverChannels[tokens[1]]->setK(false);
 	}
 	std::cout << "Channel " << tokens[1] << " successfully created." << std::endl;
+	std::cout << "CHANNELS: " << _serverChannels.size() << std::endl;
 	return (0);
 }
 
@@ -385,14 +386,14 @@ void	Server::cmdJoin(const int &cfd, const std::vector<std::string> &tokens) {
 void	Server::parseMode(const int &cfd, const std::vector<std::string> &tokens, bool condition) {
 
 	if (tokens[2][1] == 'i') {
-		_serverChannels[tokens[1].substr(1)]->setI(condition);
+		_serverChannels[tokens[1]]->setI(condition);
 		if (condition)
 			sendMessage(cfd, RPL_INVITEONLY, "");
 		else
 			sendMessage(cfd, RPL_INVITEFREE, "");
 	}
 	else if (tokens[2][1] == 't') {
-		_serverChannels[tokens[1].substr(1)]->setT(condition);
+		_serverChannels[tokens[1]]->setT(condition);
 		if (condition)
 			sendMessage(cfd, RPL_TOPICOPONLY, "");
 		else
@@ -404,11 +405,11 @@ void	Server::parseMode(const int &cfd, const std::vector<std::string> &tokens, b
 			sendMessage(cfd, ERR_KEYPARAMS, tokens[1].substr(1));
 			return;
 		}
-		_serverChannels[tokens[1].substr(1)]->setK(condition);
+		_serverChannels[tokens[1]]->setK(condition);
 		if (condition && tokens.size() == 4)
-			_serverChannels[tokens[1].substr(1)]->setKey(tokens[3]);
+			_serverChannels[tokens[1]]->setKey(tokens[3]);
 		else
-			_serverChannels[tokens[1].substr(1)]->setKey("");
+			_serverChannels[tokens[1]]->setKey("");
 		if (condition)
 			sendMessage(cfd, RPL_CHANNELPASS, "");
 		else
@@ -420,22 +421,22 @@ void	Server::parseMode(const int &cfd, const std::vector<std::string> &tokens, b
 			sendMessage(cfd, ERR_NOSUCHNICK, tokens[3]);
 			return ;
 		}
-		else if( _serverChannels[tokens[1].substr(1)]->getUsers()[_ClientsID[tokens[3]]] == NULL) {
+		else if( _serverChannels[tokens[1]]->getUsers()[_ClientsID[tokens[3]]] == NULL) {
 			sendMessage(cfd, ERR_USERNOTINCHANNEL, tokens[3]);
 			return ;
 		}
 		if (tokens.size() == 4) {
 			if (condition) {
-				_serverChannels[tokens[1].substr(1)]->setOp(_ClientsID[tokens[3]], _serverClients[_ClientsID[tokens[3]]]);
+				_serverChannels[tokens[1]]->setOp(_ClientsID[tokens[3]], _serverClients[_ClientsID[tokens[3]]]);
 				sendMessage(cfd, RPL_ASSIGNOP, tokens[3]);
 				sendMessage(_ClientsID[tokens[3]], RPL_CHANNELMODEOP, tokens[1].substr(1));
 			}
 			else {
-				if (_serverChannels[tokens[1].substr(1)]->getOps()[_ClientsID[tokens[3]]] == false) {
+				if (_serverChannels[tokens[1]]->getOps()[_ClientsID[tokens[3]]] == false) {
 					sendMessage(cfd, ERR_NOTOPERATOR, tokens[3]);
 					return ;
 				}
-				_serverChannels[tokens[1].substr(1)]->removeOp(_ClientsID[tokens[3]]);
+				_serverChannels[tokens[1]]->removeOp(_ClientsID[tokens[3]]);
 				sendMessage(cfd, RPL_REMOVEOPERATOR, tokens[3]);
 				sendMessage(_ClientsID[tokens[3]], RPL_REMOVEDOP, tokens[1].substr(1));
 			}
@@ -445,15 +446,15 @@ void	Server::parseMode(const int &cfd, const std::vector<std::string> &tokens, b
 	}
 	else if (tokens[2][1] == 'l') {
 		if (tokens.size() == 4 && condition && atoi(tokens[3].c_str()) > 0) {
-			_serverChannels[tokens[1].substr(1)]->setLimit(atoi(tokens[3].c_str()));
-			_serverChannels[tokens[1].substr(1)]->setL(condition);
+			_serverChannels[tokens[1]]->setLimit(atoi(tokens[3].c_str()));
+			_serverChannels[tokens[1]]->setL(condition);
 		}
 		else if (tokens.size() != 4) {
 			sendMessage(cfd, ERR_USERLIMITPARAMS, tokens[1].substr(1));
 			return;
 		}
 		else
-			_serverChannels[tokens[1].substr(1)]->setLimit(0);
+			_serverChannels[tokens[1]]->setLimit(0);
 		if (condition)
 			sendMessage(cfd, RPL_USERLIMITSET, tokens[1].substr(1));
 		else
@@ -466,22 +467,24 @@ void	Server::parseMode(const int &cfd, const std::vector<std::string> &tokens, b
 void	Server::cmdMode(const int &cfd, const std::vector<std::string> &tokens) {
 	bool	condition;
 
-	if (tokens.size() > 1 && _serverChannels[tokens[1].substr(1)]->getOps()[cfd] == NULL) {
+	if (tokens.size() > 1 && _serverChannels[tokens[1]]
+		&& _serverChannels[tokens[1]]->getOps()[cfd] == NULL) {
 		sendMessage(cfd, ERR_NOPERMISSION, tokens[1].substr(1));
 		return ;
 	}
-	else if (tokens.size() > 1 && _serverChannels[tokens[1].substr(1)]->getUsers()[cfd] == NULL) {
+	else if (tokens.size() > 1 && _serverChannels[tokens[1]]
+		&& _serverChannels[tokens[1]]->getUsers()[cfd] == NULL) {
 		sendMessage(cfd, ERR_NOTONCHANNEL, tokens[1].substr(1));
 		return ;
 	}
 	if ((tokens.size() != 3 && tokens.size() != 4) || tokens[1][0] != '#'
 		|| tokens[2].length() != 2 || (tokens[2][0] != '+' && tokens[2][0] != '-')) {
-		sendMessage(cfd, ERR_MODEPARAMS, tokens[1].substr(1));
+		sendMessage(cfd, ERR_MODEPARAMS, "");
 		return ;
 	}
 	else {
-		if (_serverChannels.find(tokens[1].substr(1)) == _serverChannels.end()) {
-			sendMessage(cfd, ERR_NOSUCHCHANNEL, tokens[1].substr(1));
+		if (_serverChannels.find(tokens[1]) == _serverChannels.end()) {
+			sendMessage(cfd, ERR_NOSUCHCHANNEL, "MODE");
 			return ;
 		}
 		if (tokens[2][0] == '+')

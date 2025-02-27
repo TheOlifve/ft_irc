@@ -1,0 +1,29 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "Debug C++",
+            "type": "cppdbg",
+            "request": "launch",
+            "program": "${workspaceFolder}/ircserv",  // Path to your compiled binary
+            "args": ["6666", "asd"],
+            "stopAtEntry": true,
+            "cwd": "${workspaceFolder}",
+            "environment": [],
+            "externalConsole": false,
+            "MIMode": "gdb",  // Change to "lldb" for macOS
+            "miDebuggerPath": "/usr/bin/gdb",  // Path to gdb
+            "preLaunchTask": "build",  // This tells VSCode to run the build task before debugging
+            "setupCommands": [
+                {
+                    "description": "Enable pretty-printing for gdb",
+                    "text": "-enable-pretty-printing",
+                    "ignoreFailures": true
+                }
+            ],
+            "sourceFileMap": {
+                "/path/to/source": "${workspaceFolder}"  // Adjust the source file map if necessary
+            }
+        }
+    ]
+}
