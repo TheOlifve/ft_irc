@@ -25,7 +25,6 @@ class Server {
 		void	cmdMode(const int &, const std::vector<std::string> &);
 		void	cmdUser(const int &, const std::vector<std::string> &);
 		void	cmdNick(const int &, const std::vector<std::string> &);
-		void	cmdStatus(const int &, const std::vector<std::string> &);
 		void	cmdPrivmsg(const int &, const std::vector<std::string> &);
 		void	parseMode(const int &, const std::vector<std::string> &, bool);
 		void	removeClient(int);

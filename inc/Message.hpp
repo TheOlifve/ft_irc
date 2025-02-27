@@ -35,5 +35,24 @@
 #define ERR_PASSWDMISMATCH		464
 #define ERR_SERVICESFULL		471
 #define ERR_BADCHANNELKEY		475
+#define RPL_CHANNELMODEOP		730
+#define RPL_INVITEONLY			731
+#define RPL_INVITEFREE			732
+#define RPL_TOPICOPONLY			733	// Only operators can set the channel's topic
+#define RPL_TOPICOPANYONE		734	// Anyone can set the channel's topic
+#define RPL_CHANNELPASS			735	// Custom numeric reply for setting password
+#define RPL_CHANNELPASSLESS		736	// Custom numeric reply for making the channel passwordless
+#define RPL_ASSIGNOP			737	// Custom numeric reply for setting user as operator
+#define ERR_NOTOPERATOR			738	// Error code for user not being an operator in the channel
+#define RPL_REMOVEOPERATOR		739	// Response code for user removed from the operator list
+#define RPL_REMOVEDOP			740 // Response code for user removed from the operator list
+#define RPL_USERLIMITSET		741	// Defining the error code for setting a user limit
+#define RPL_USERLIMITREMOVED	742	// Defining the error code for removing the user limit
+#define ERR_WRONGMODE			743	// Error code for wrong mode
+#define ERR_NOPERMISSION		744	// Error code for lack of permission to change mode
+#define ERR_MODEPARAMS			745	// Error code for wrong mode parameters
+#define ERR_KEYPARAMS			746	// Error code for wrong key parameters
+#define ERR_OPPARAMS			747	// Error code for wrong operator parameters
+#define ERR_USERLIMITPARAMS		748	// Error code for wrong user limit parameters
 
 # endif

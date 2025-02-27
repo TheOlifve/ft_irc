@@ -233,6 +233,127 @@ void	Server::sendMessage(const int &cfd, const int code, const std::string token
 			text.append(token);
 			text.append(" :Erroneous username\r\n");
 			break;
+		case RPL_CHANNELMODEOP:
+			text = ":ft_irc 730 ";
+			text.append(_serverClients[cfd]->getNickname());
+			text.append(" ");
+			text.append(token);
+			text.append(" :You have been assigned as operator in the channel\r\n");
+			break;
+		case RPL_INVITEONLY:
+			text = ":ft_irc 731 ";
+			text.append(_serverClients[cfd]->getNickname());
+			text.append(" :You have set the channel to invite only.\r\n");
+			break;
+		case RPL_INVITEFREE:
+			text = ":ft_irc 732 ";
+			text.append(_serverClients[cfd]->getNickname());
+			text.append(" :You have set the channel to be invite-free.\r\n");
+			break;
+		case RPL_TOPICOPONLY:
+			text = ":ft_irc 733 ";
+			text.append(_serverClients[cfd]->getNickname());
+			text.append(" :You have set the channel's topic to be set by operators only.\r\n");
+			break;
+		case RPL_TOPICOPANYONE:
+			text = ":ft_irc 734 ";
+			text.append(_serverClients[cfd]->getNickname());
+			text.append(" :You have set the channel's topic to be set by anyone.\r\n");
+			break;
+		case RPL_CHANNELPASS:
+			text = ":ft_irc 735 ";
+			text.append(_serverClients[cfd]->getNickname());
+			text.append(" :You have set the channel to be password protected.\r\n");
+			break;
+		case RPL_CHANNELPASSLESS:
+			text = ":ft_irc 736 ";
+			text.append(_serverClients[cfd]->getNickname());
+			text.append(" :You made the channel passwordless.\r\n");
+			break;
+		case RPL_ASSIGNOP:
+			text = ":ft_irc 737 ";
+			text.append(_serverClients[cfd]->getNickname());
+			text.append(" ");
+			text.append(token);
+			text.append(" :You have set the user to be an operator.\r\n");
+			break;
+		case ERR_NOTOPERATOR:
+			text = ":ft_irc 738 ";
+			text.append(_serverClients[cfd]->getNickname());
+			text.append(" ");
+			text.append(token);
+			text.append(" :ERROR: User is not an operator in this channel.\r\n");
+			break;
+		case RPL_REMOVEOPERATOR:
+			text = ":ft_irc 739 ";
+			text.append(_serverClients[cfd]->getNickname());
+			text.append(" ");
+			text.append(token);
+			text.append(" :You have removed the user from the operator list.\r\n");
+			break;
+		case RPL_REMOVEDOP:
+			text = ":ft_irc 740 ";
+			text.append(_serverClients[cfd]->getNickname());
+			text.append(" ");
+			text.append(token);
+			text.append(" :You have been removed from the operator list.\r\n");
+			break;
+		case RPL_USERLIMITSET:
+			text = ":ft_irc 741 ";
+			text.append(_serverClients[cfd]->getNickname());
+			text.append(" ");
+			text.append(token);
+			text.append(" :You have set the channel to have a user limit.\r\n");
+			break;
+		case RPL_USERLIMITREMOVED:
+			text = ":ft_irc 742 ";
+			text.append(_serverClients[cfd]->getNickname());
+			text.append(" ");
+			text.append(token);
+			text.append(" :You have removed the user limit from the channel.\r\n");
+			break;
+		case ERR_WRONGMODE:
+			text = ":ft_irc 743 ";
+			text.append(_serverClients[cfd]->getNickname());
+			text.append(" ");
+			text.append(token);
+			text.append(" :ERROR: Wrong channel mode.\r\n");
+			break;
+		case ERR_NOPERMISSION:
+			text = ":ft_irc 744 ";
+			text.append(_serverClients[cfd]->getNickname());
+			text.append(" ");
+			text.append(token);
+			text.append(" :ERROR: You don't have permission to change the channel mode.\r\n");
+			break;
+		case ERR_MODEPARAMS:
+			text = ":ft_irc 745 ";
+			text.append(_serverClients[cfd]->getNickname());
+			text.append(" ");
+			text.append(token);
+			text.append(" :ERROR: Wrong number of parameters: Usage /MODE '#channel' '+/-mode' 'parameter'.\r\n");
+			break;
+		case ERR_KEYPARAMS:
+			text = ":ft_irc 746 ";
+			text.append(_serverClients[cfd]->getNickname());
+			text.append(" ");
+			text.append(token);
+			text.append(" :ERROR: Wrong number of parameters: Usage /MODE '#channel' '+/-k' 'key'.\r\n");
+			break;
+		case ERR_OPPARAMS:
+			text = ":ft_irc 747 ";
+			text.append(_serverClients[cfd]->getNickname());
+			text.append(" ");
+			text.append(token);
+			text.append(" :ERROR: Wrong number of parameters: Usage /MODE '#channel' '+/-o' 'username'.\r\n");
+			break;
+		case ERR_USERLIMITPARAMS:
+			text = ":ft_irc 748 ";
+			text.append(_serverClients[cfd]->getNickname());
+			text.append(" ");
+			text.append(token);
+			text.append(" :ERROR: Wrong number of parameters: Usage /MODE '#channel' '+/-l' 'limit'.\r\n");
+			break;
 		default:
 			break;
 	}
