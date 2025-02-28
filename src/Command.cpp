@@ -483,7 +483,7 @@ void	Server::cmdMode(const int &cfd, const std::vector<std::string> &tokens) {
 		return ;
 	}
 	else {
-		if (_serverChannels.find(tokens[1]) == _serverChannels.end()) {
+		if (_serverChannels.find(tokens[1]) == _serverChannels.end() || _serverChannels[tokens[1]] == NULL) {
 			sendMessage(cfd, ERR_NOSUCHCHANNEL, "MODE");
 			return ;
 		}
