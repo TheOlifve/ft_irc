@@ -225,6 +225,8 @@ void	Server::cmdParsing(const int &cfd, const std::vector<std::string> &tokens) 
 		cmdPrivmsg(cfd, tokens);
 	else if (!tokens[0].compare("MODE"))
 		cmdMode(cfd, tokens);
+	else if (!tokens[0].compare("TOPIC"))
+		cmdTopic(cfd, tokens);
 	else if (!tokens[0].compare("PONG"))
 		;
 	else
@@ -400,7 +402,7 @@ void	Server::parseMode(const int &cfd, const std::vector<std::string> &tokens, b
 			sendMessage(cfd, RPL_TOPICOPANYONE, "");
 	}
 	else if (tokens[2][1] == 'k') {
-		if (tokens.size() != 4)
+		if (tokens.size() != 4 && condition)
 		{
 			sendMessage(cfd, ERR_KEYPARAMS, tokens[1].substr(1));
 			return;
@@ -489,6 +491,34 @@ void	Server::cmdMode(const int &cfd, const std::vector<std::string> &tokens) {
 		parseMode(cfd, tokens, condition);
 	}
 
+}
+
+void	Server::cmdTopic(const int &cfd, const std::vector<std::string> &tokens) {
+	if (tokens.size() != 3 || tokens[1][0] != '#') {
+		sendMessage(cfd, ERR_TOPICPARAMS, tokens[1]);
+		return;
+	}
+	if (_serverClients[cfd]->getChannel() == "\0" ||
+		_serverClients[cfd]->getChannel().compare(tokens[1])) {
+		sendMessage(cfd, ERR_NOTONCHANNEL, tokens[1]);
+		return;
+	}
+	if (_serverChannels.find(tokens[1]) == _serverChannels.end()) {
+		sendMessage(cfd, ERR_NOSUCHCHANNEL, tokens[1]);
+		return;
+	}
+	if (_serverChannels[tokens[1]]->getT() == false) {
+		_serverChannels[tokens[1]]->setTopic(tokens[2]);
+		sendMessage(cfd, RPL_TOPICSET, tokens[2]);
+		_serverChannels[tokens[1]]->channelMessage(*_serverClients[cfd], RPL_USERTOPICSET, tokens[1]);
+	}
+	else if (_serverChannels[tokens[1]]->getT() == true && _serverChannels[tokens[1]]->getOps()[cfd] != NULL) {
+		_serverChannels[tokens[1]]->setTopic(tokens[2]);
+		sendMessage(cfd, RPL_TOPICSET, tokens[2]);
+		_serverChannels[tokens[1]]->channelMessage(*_serverClients[cfd], RPL_USERTOPICSET, tokens[1]);
+	}
+	else
+		sendMessage(cfd, ERR_NOTOPERATOR, tokens[1]);
 }
 
 void	Server::serverInput(void) {

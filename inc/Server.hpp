@@ -23,6 +23,7 @@ class Server {
 		void	cmdJoin(const int &, const std::vector<std::string> &);
 		void	cmdList(const int &, const std::vector<std::string> &);
 		void	cmdMode(const int &, const std::vector<std::string> &);
+		void	cmdTopic(const int &cfd, const std::vector<std::string> &tokens);
 		void	cmdUser(const int &, const std::vector<std::string> &);
 		void	cmdNick(const int &, const std::vector<std::string> &);
 		void	cmdPrivmsg(const int &, const std::vector<std::string> &);

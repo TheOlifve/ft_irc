@@ -65,6 +65,18 @@ void	Channel::channelMessage(const Client &client, const int code, const std::st
 			text.append(token);
 			text.append("\r\n");
 			break;
+		case RPL_USERTOPICSET:
+    		text = ":";
+    		text.append(client.getNickname());
+    		text.append("!");
+    		text.append(client.getUsername());
+    		text.append("@ft_irc ");
+    		text.append("TOPIC ");
+    		text.append(token);
+    		text.append(" :");
+    		text.append(getTopic());
+    		text.append("\r\n");
+    		break;
 		default:
 			break;
 	}
@@ -165,6 +177,10 @@ void	Channel::removeOp(const int &cfd) {
 
 void	Channel::setLimit(int limit) {
 	_limit = limit;
+}
+
+void	Channel::setTopic(std::string topic) {
+	_topic = topic;
 }
 
 int		Channel::getLimit(void) const {

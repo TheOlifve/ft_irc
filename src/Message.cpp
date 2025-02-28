@@ -352,6 +352,20 @@ void	Server::sendMessage(const int &cfd, const int code, const std::string token
 			text.append(token);
 			text.append(" :ERROR: Wrong number of parameters: Usage /MODE '#channel' '+/-l' 'limit'.\r\n");
 			break;
+		case ERR_TOPICPARAMS:
+			text = ":ft_irc 749 ";
+			text.append(_serverClients[cfd]->getNickname());
+			text.append(" ");
+			text.append(token);
+			text.append(" :ERROR: Wrong number of parameters. Use: /TOPIC '#channel' 'topic'\r\n");
+			break;
+		case RPL_TOPICSET:
+			text = ":ft_irc 750 ";
+			text.append(_serverClients[cfd]->getNickname());
+			text.append(" ");
+			text.append(token);
+			text.append(" :You have set the channel topic.\r\n");
+			break;
 		default:
 			break;
 	}

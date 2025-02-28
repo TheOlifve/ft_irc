@@ -54,5 +54,8 @@
 #define ERR_KEYPARAMS			746	// Error code for wrong key parameters
 #define ERR_OPPARAMS			747	// Error code for wrong operator parameters
 #define ERR_USERLIMITPARAMS		748	// Error code for wrong user limit parameters
+#define ERR_TOPICPARAMS			749 // Custom error code for wrong number of parameters in TOPIC command
+#define RPL_TOPICSET			750 // Custom reply code for successful topic set
+#define RPL_USERTOPICSET		751 // Custom reply code for successfully setting the channel topic
 
 # endif
