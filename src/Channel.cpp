@@ -66,17 +66,22 @@ void	Channel::channelMessage(const Client &client, const int code, const std::st
 			text.append("\r\n");
 			break;
 		case RPL_USERTOPICSET:
-    		text = ":";
-    		text.append(client.getNickname());
-    		text.append("!");
-    		text.append(client.getUsername());
-    		text.append("@ft_irc ");
-    		text.append("TOPIC ");
-    		text.append(token);
-    		text.append(" :");
-    		text.append(getTopic());
-    		text.append("\r\n");
-    		break;
+			text = ":";
+			text.append(client.getNickname());
+			text.append("!");
+			text.append(client.getUsername());
+			text.append("@ft_irc ");
+			text.append("TOPIC ");
+			text.append(token);
+			text.append(" :");
+			text.append(getTopic());
+			text.append("\r\n");
+			break;
+		case ERR_CHANNELISFULL:
+			text = ":ft_irc 752 ";
+			text.append(client.getNickname());
+			text.append(" :Cannot join, channel is full\r\n");
+			break;
 		default:
 			break;
 	}
@@ -95,18 +100,24 @@ void	Channel::channelMessage(const Client &client, const int code, const std::st
 	}
 }
 
-void	Channel::joinChannel(Client &client, const std::vector<std::string> &tokens) {
+bool	Channel::joinChannel(Client &client, const std::vector<std::string> &tokens) {
 	int	cfd = client.getUserFd();
 
 	if (_online == 0) {
 		client.setOp(true);
 		_ops.insert(std::pair<const int,const Client *>(cfd, &client));
 	}
+	else if (_online == _limit) {
+		std::cout << "Client " << client.getNickname() << "[" << cfd << "] : Cannot join, channel is full." << std::endl;
+		channelMessage(client, ERR_CHANNELISFULL, "");
+		return false;
+	}
 	else
 		_users.insert(std::pair<const int,const Client *>(cfd, &client));
 	std::cout << "Client " << client.getNickname() << "[" << cfd << "] : Joined to the " << tokens[1] << " channel." << std::endl;
 	++_online;
 	channelMessage(client, RPL_JOINCHANNEL, "");
+	return true;
 }
 
 std::string	Channel::usersList(void) {

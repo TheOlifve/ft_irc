@@ -3,7 +3,7 @@
 Server::Server(): _name("ft_irc"), _port(0), _password("0000"), _maxOnline(5), _currentOnline(0), _pfd(NULL), _serverSocket(0), _serverAddr(), _listening(false) {}
 
 Server::Server(int port, char *password, int maxOnline): _name("ft_irc"), _port(port), _password(password) {
-	_maxOnline = maxOnline + 20;
+	_maxOnline = maxOnline + 2;
 	_listening = false;
 	createSocket();
 	_pfd = new pollfd[_maxOnline];

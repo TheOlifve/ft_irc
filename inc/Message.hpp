@@ -57,5 +57,6 @@
 #define ERR_TOPICPARAMS			749 // Custom error code for wrong number of parameters in TOPIC command
 #define RPL_TOPICSET			750 // Custom reply code for successful topic set
 #define RPL_USERTOPICSET		751 // Custom reply code for successfully setting the channel topic
+#define ERR_CHANNELISFULL		752 // Custom error code for channel being full
 
 # endif

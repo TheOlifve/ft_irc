@@ -366,6 +366,11 @@ void	Server::sendMessage(const int &cfd, const int code, const std::string token
 			text.append(token);
 			text.append(" :You have set the channel topic.\r\n");
 			break;
+		case ERR_CHANNELISFULL:
+			text = ":ft_irc 752 ";
+			text.append(_serverClients[cfd]->getNickname());
+			text.append(" :Cannot join, channel is full\r\n");
+			break;
 		default:
 			break;
 	}

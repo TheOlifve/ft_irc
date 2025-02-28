@@ -11,7 +11,7 @@ class Channel {
 		Channel(std::string, std::string);
 		~Channel();
 		void								removeClientCh(int);
-		void								joinChannel(Client &, const std::vector<std::string> &);
+		bool								joinChannel(Client &, const std::vector<std::string> &);
 		void								channelMessage(const Client &, const int, const std::string);
 		std::string							usersList(void);
 
