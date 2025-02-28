@@ -1,0 +1,56 @@
+name: Build and Test IRC Server
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  build-and-test:
+    runs-on: ${{ matrix.os }}
+
+    strategy:
+      matrix:
+        os: [ubuntu-latest, macos-latest]
+        compiler: [gcc]
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+
+    - name: Install dependencies (Linux/macOS)
+      if: matrix.os != 'windows-latest'
+      run: |
+        if [ "${{ matrix.os }}" == "ubuntu-latest" ]; then
+          sudo apt-get update
+          sudo apt-get install -y build-essential
+        elif [ "${{ matrix.os }}" == "macos-latest" ]; then
+          brew install make
+        fi
+
+    - name: Set Compiler
+      run: |
+        echo "CC=${{ matrix.compiler }}" >> $GITHUB_ENV
+
+    - name: Build project
+      run: make
+      env:
+        CC: ${{ matrix.compiler }}
+
+    - name: Run IRC Server and Test Client Communication
+      run: |
+        ./ircserv 6666 mysecretpassword > server.log 2>&1 &
+        SERVER_PID=$!
+
+        sleep 10
+
+        nc -zv localhost 6666 || echo "Error: Port is not aveilable"
+
+        echo -e "PASS mysecretpassword\nNICK testuser\nUSER testuser 0 * :Test User\nJOIN #testchannel\nPRIVMSG #testchannel :Hello, world!\nQUIT" | nc -w 5 localhost 6666 || echo "Error"
+
+        kill $SERVER_PID || true
+
+        echo "Server log:"
+        cat server.log
+      shell: bash
