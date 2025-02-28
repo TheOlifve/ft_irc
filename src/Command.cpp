@@ -472,11 +472,6 @@ void	Server::cmdMode(const int &cfd, const std::vector<std::string> &tokens) {
 		sendMessage(cfd, ERR_NOPERMISSION, tokens[1].substr(1));
 		return ;
 	}
-	else if (tokens.size() > 1 && _serverChannels.find(tokens[1]) != _serverChannels.end()
-		&& _serverChannels[tokens[1]]->getUsers()[cfd] == NULL) {
-		sendMessage(cfd, ERR_NOTONCHANNEL, tokens[1].substr(1));
-		return ;
-	}
 	if ((tokens.size() != 3 && tokens.size() != 4) || tokens[1][0] != '#'
 		|| tokens[2].length() != 2 || (tokens[2][0] != '+' && tokens[2][0] != '-')) {
 		sendMessage(cfd, ERR_MODEPARAMS, "");
