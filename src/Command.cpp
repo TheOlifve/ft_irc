@@ -467,12 +467,12 @@ void	Server::parseMode(const int &cfd, const std::vector<std::string> &tokens, b
 void	Server::cmdMode(const int &cfd, const std::vector<std::string> &tokens) {
 	bool	condition;
 
-	if (tokens.size() > 1 && _serverChannels[tokens[1]]
+	if (tokens.size() > 1 && _serverChannels.find(tokens[1]) != _serverChannels.end()
 		&& _serverChannels[tokens[1]]->getOps()[cfd] == NULL) {
 		sendMessage(cfd, ERR_NOPERMISSION, tokens[1].substr(1));
 		return ;
 	}
-	else if (tokens.size() > 1 && _serverChannels[tokens[1]]
+	else if (tokens.size() > 1 && _serverChannels.find(tokens[1]) != _serverChannels.end()
 		&& _serverChannels[tokens[1]]->getUsers()[cfd] == NULL) {
 		sendMessage(cfd, ERR_NOTONCHANNEL, tokens[1].substr(1));
 		return ;
