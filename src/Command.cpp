@@ -374,11 +374,11 @@ void	Server::cmdJoin(const int &cfd, const std::vector<std::string> &tokens) {
 		_serverClients[cfd]->setOp(false);
 		_serverChannels[_serverClients[cfd]->getChannel()]->removeClientCh(cfd);
 	}
-	_serverClients[cfd]->setChannel(tokens[1]);
 	if (!_serverChannels[tokens[1]]->joinChannel(*_serverClients[cfd], tokens)) {
 		sendMessage(cfd, ERR_CHANNELISFULL, tokens[1]);
 		return;
 	}
+	_serverClients[cfd]->setChannel(tokens[1]);
 	sendMessage(cfd, RPL_JOINCHANNEL, tokens[1]);
 	if (_serverChannels[tokens[1]]->getT() == true)
 		sendMessage(cfd, RPL_TOPIC, _serverChannels[tokens[1]]->getTopic());
