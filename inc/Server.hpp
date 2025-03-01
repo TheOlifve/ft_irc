@@ -35,6 +35,8 @@ class Server {
 		void	authorization(const int &, const std::vector<std::string> &);;
 		void	sendMessage(const int &, const int, const std::string);
 		void	cmdKick(const int &cfd, const std::vector<std::string> &tokens);
+		void	cmdInvite(const int &cfd, const std::vector<std::string> &tokens);
+		std::string buildInviteMessage(const std::string &inviter, const std::string &channel);
 
 		bool	getListening(void) const;
 	private:

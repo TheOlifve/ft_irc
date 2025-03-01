@@ -371,6 +371,18 @@ void	Server::sendMessage(const int &cfd, const int code, const std::string token
 			text.append(_serverClients[cfd]->getNickname());
 			text.append(" :Cannot join, channel is full\r\n");
 			break;
+		case RPL_INVITING:
+			text = ":ft_irc 341 ";
+			text.append(_serverClients[cfd]->getNickname());
+			text.append(" ");
+			text.append(token);
+			text.append("\r\n");
+			break;
+		case RPL_INVITE:
+			text = ":";
+			text.append(token);
+			text.append("\r\n");
+			break;
 		default:
 			break;
 	}

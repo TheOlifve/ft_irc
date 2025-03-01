@@ -38,6 +38,10 @@ class Channel {
 		std::string							getName(void) const;
 		std::map<const int,const Client *>	getOps(void) const;
 		std::map<const int,const Client *>	getUsers(void) const;
+		void								addInvited(const int &cfd);
+		bool								isInvited(const int &cfd) const;
+		void								removeInvited(const int &cfd);
+
 	private:
 		std::string							_name;
 		std::string							_key;
@@ -51,6 +55,7 @@ class Channel {
 		bool								_k;
 		bool								_o;
 		bool								_l;
+		std::set<int, std::less<int> >		_invited;  // Fixed set declaration
 };
 
 # endif

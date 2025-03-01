@@ -116,6 +116,10 @@ void	Channel::channelMessage(const Client &client, const int code, const std::st
 bool	Channel::joinChannel(Client &client, const std::vector<std::string> &tokens) {
 	int	cfd = client.getUserFd();
 
+	if (_i && !isInvited(cfd)) {
+		return false;
+	}
+
 	if (_online == 0) {
 		client.setOp(true);
 		_ops.insert(std::pair<const int,const Client *>(cfd, &client));
@@ -130,6 +134,7 @@ bool	Channel::joinChannel(Client &client, const std::vector<std::string> &tokens
 	std::cout << "Client " << client.getNickname() << "[" << cfd << "] : Joined to the " << tokens[1] << " channel." << std::endl;
 	++_online;
 	channelMessage(client, RPL_JOINCHANNEL, "");
+	removeInvited(cfd);
 	return true;
 }
 
@@ -254,4 +259,16 @@ std::string	Channel::getTopic(void) const {
 	if (_topic.empty())
 		return "";
 	return _topic;
+}
+
+void    Channel::addInvited(const int &cfd) {
+    _invited.insert(cfd);
+}
+
+bool    Channel::isInvited(const int &cfd) const {
+    return _invited.find(cfd) != _invited.end();
+}
+
+void    Channel::removeInvited(const int &cfd) {
+    _invited.erase(cfd);
 }
