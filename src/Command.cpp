@@ -501,31 +501,47 @@ void	Server::cmdMode(const int &cfd, const std::vector<std::string> &tokens) {
 }
 
 void	Server::cmdTopic(const int &cfd, const std::vector<std::string> &tokens) {
-	if (tokens.size() != 3 || tokens[1][0] != '#') {
-		sendMessage(cfd, ERR_TOPICPARAMS, tokens[1]);
+	// Check basic parameters
+	if (tokens.size() < 2 || tokens[1][0] != '#') {
+		sendMessage(cfd, ERR_NEEDMOREPARAMS, "TOPIC");
 		return;
 	}
-	if (_serverClients[cfd]->getChannel() == "\0" ||
-		_serverClients[cfd]->getChannel().compare(tokens[1])) {
-		sendMessage(cfd, ERR_NOTONCHANNEL, tokens[1]);
-		return;
-	}
+
+	// Check if channel exists
 	if (_serverChannels.find(tokens[1]) == _serverChannels.end()) {
 		sendMessage(cfd, ERR_NOSUCHCHANNEL, tokens[1]);
 		return;
 	}
-	if (_serverChannels[tokens[1]]->getT() == false) {
-		_serverChannels[tokens[1]]->setTopic(tokens[2]);
-		sendMessage(cfd, RPL_TOPICSET, tokens[2]);
-		_serverChannels[tokens[1]]->channelMessage(*_serverClients[cfd], RPL_USERTOPICSET, tokens[1]);
+
+	// Check if user is on channel
+	if (_serverClients[cfd]->getChannel() != tokens[1]) {
+		sendMessage(cfd, ERR_NOTONCHANNEL, tokens[1]);
+		return;
 	}
-	else if (_serverChannels[tokens[1]]->getT() == true && _serverChannels[tokens[1]]->getOps()[cfd] != NULL) {
-		_serverChannels[tokens[1]]->setTopic(tokens[2]);
-		sendMessage(cfd, RPL_TOPICSET, tokens[2]);
-		_serverChannels[tokens[1]]->channelMessage(*_serverClients[cfd], RPL_USERTOPICSET, tokens[1]);
+
+	// If no topic parameter is given, return the current topic
+	if (tokens.size() == 2) {
+		if (_serverChannels[tokens[1]]->getTopic().empty()) {
+			sendMessage(cfd, RPL_NOTOPIC, tokens[1]);
+		} else {
+			sendMessage(cfd, RPL_TOPIC, _serverChannels[tokens[1]]->getTopic());
+		}
+		return;
 	}
-	else
-		sendMessage(cfd, ERR_NOTOPERATOR, tokens[1]);
+
+	// Check if channel is +t (topic protected) and user is not an operator
+	if (_serverChannels[tokens[1]]->getT() && !_serverChannels[tokens[1]]->getOps()[cfd]) {
+		sendMessage(cfd, ERR_CHANOPRIVSNEEDED, tokens[1]);
+		return;
+	}
+
+	// Build and set the new topic
+	std::string newTopic = buildMessage(2, tokens);
+	_serverChannels[tokens[1]]->setTopic(newTopic);
+
+	// Notify the channel about the topic change
+	_serverChannels[tokens[1]]->channelMessage(*_serverClients[cfd], RPL_USERTOPICSET, tokens[1]);
+	sendMessage(cfd, RPL_TOPICSET, newTopic);
 }
 
 void	Server::serverInput(void) {
