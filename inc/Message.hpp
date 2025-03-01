@@ -58,5 +58,7 @@
 #define RPL_TOPICSET			750 // Custom reply code for successful topic set
 #define RPL_USERTOPICSET		751 // Custom reply code for successfully setting the channel topic
 #define ERR_CHANNELISFULL		752 // Custom error code for channel being full
+#define ERR_CHANOPRIVSNEEDED    482 // You're not channel operator
+#define RPL_KICK                384 // Custom code for kick messages
 
 # endif

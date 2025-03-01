@@ -227,6 +227,8 @@ void	Server::cmdParsing(const int &cfd, const std::vector<std::string> &tokens) 
 		cmdMode(cfd, tokens);
 	else if (!tokens[0].compare("TOPIC"))
 		cmdTopic(cfd, tokens);
+	else if (!tokens[0].compare("KICK"))
+		cmdKick(cfd, tokens);
 	else if (!tokens[0].compare("PONG"))
 		;
 	else
@@ -532,4 +534,61 @@ void	Server::serverInput(void) {
 	bytesRead = read(0, buff, sizeof(buff) - 1);
 	if (bytesRead == 0)
 		throw std::runtime_error("EXIT: EOF on input!");
+}
+
+void	Server::cmdKick(const int &cfd, const std::vector<std::string> &tokens) {
+	if (tokens.size() < 3) {
+		sendMessage(cfd, ERR_NEEDMOREPARAMS, "KICK");
+		return;
+	}
+
+	// Check if channel exists
+	if (_serverChannels.find(tokens[1]) == _serverChannels.end()) {
+		sendMessage(cfd, ERR_NOSUCHCHANNEL, tokens[1]);
+		return;
+	}
+
+	// Check if kicker is on the channel
+	if (_serverClients[cfd]->getChannel() != tokens[1]) {
+		sendMessage(cfd, ERR_NOTONCHANNEL, tokens[1]);
+		return;
+	}
+
+	// Check if kicker is an operator
+	if (!_serverChannels[tokens[1]]->getOps()[cfd]) {
+		sendMessage(cfd, ERR_CHANOPRIVSNEEDED, tokens[1]);
+		return;
+	}
+
+	// Find target user's client fd
+	std::map<std::string, int>::iterator it = _ClientsID.find(tokens[2]);
+	if (it == _ClientsID.end()) {
+		sendMessage(cfd, ERR_NOSUCHNICK, tokens[2]);
+		return;
+	}
+	int targetFd = it->second;
+
+	// Check if target is on the channel
+	if (_serverClients[targetFd]->getChannel() != tokens[1]) {
+		sendMessage(cfd, ERR_USERNOTINCHANNEL, tokens[2]);
+		return;
+	}
+
+	// Build kick message
+	std::string kickMsg;
+	if (tokens.size() > 3)
+		kickMsg = buildMessage(3, tokens);
+	else
+		kickMsg = _serverClients[cfd]->getNickname();
+
+	// Send kick message to channel
+	_serverChannels[tokens[1]]->channelMessage(*_serverClients[targetFd], RPL_KICK, kickMsg);
+
+	// Remove user from channel
+	_serverChannels[tokens[1]]->removeClientCh(targetFd);
+	_serverClients[targetFd]->setChannel("\0");
+	_serverClients[targetFd]->setOp(false);
+
+	// Send confirmation to kicked user
+	sendMessage(targetFd, RPL_KICK, kickMsg);
 }
