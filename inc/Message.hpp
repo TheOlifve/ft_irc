@@ -62,5 +62,7 @@
 #define RPL_KICK                384 // Custom code for kick messages
 #define RPL_INVITING            341 // <channel> <nick>
 #define RPL_INVITE              345 // Custom code for invite messages
+#define RPL_CHANNELMODEIS    324  // "<channel> <mode> <mode params>"
+#define ERR_UNKNOWNMODE      472  // "<char> :is unknown mode char to me"
 
 # endif
