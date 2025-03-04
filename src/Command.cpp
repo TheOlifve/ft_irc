@@ -227,6 +227,8 @@ void	Server::cmdParsing(const int &cfd, const std::vector<std::string> &tokens) 
 		cmdMode(cfd, tokens);
 	else if (!tokens[0].compare("TOPIC"))
 		cmdTopic(cfd, tokens);
+	else if (!tokens[0].compare("KICK"))
+		cmdKick(cfd, tokens);
 	else if (!tokens[0].compare("PONG"))
 		;
 	else
@@ -518,6 +520,98 @@ void	Server::cmdTopic(const int &cfd, const std::vector<std::string> &tokens) {
 	else
 		sendMessage(cfd, ERR_NOTOPERATOR, tokens[1]);
 }
+
+void	Server::cmdKick(const int &cfd, const std::vector<std::string> &tokens) {
+	if (tokens.size() < 3) {
+		sendMessage(cfd, ERR_NEEDMOREPARAMS, "KICK");
+		return;
+	}
+
+	if (_serverChannels.find(tokens[1]) == _serverChannels.end()) {
+		sendMessage(cfd, ERR_NOSUCHCHANNEL, tokens[1]);
+		return;
+	}
+
+	if (_serverClients[cfd]->getChannel() != tokens[1]) {
+		sendMessage(cfd, ERR_NOTONCHANNEL, tokens[1]);
+		return;
+	}
+
+	if (!_serverChannels[tokens[1]]->getOps()[cfd]) {
+		sendMessage(cfd, ERR_CHANOPRIVSNEEDED, tokens[1]);
+		return;
+	}
+
+	std::map<std::string, int>::iterator it = _ClientsID.find(tokens[2]);
+	if (it == _ClientsID.end()) {
+		sendMessage(cfd, ERR_NOSUCHNICK, tokens[2]);
+		return;
+	}
+	int targetFd = it->second;
+
+	if (_serverClients[targetFd]->getChannel() != tokens[1]) {
+		sendMessage(cfd, ERR_USERNOTINCHANNEL, tokens[2]);
+		return;
+	}
+
+	std::string kickMsg;
+
+	if (tokens.size() > 3)
+		kickMsg = buildMessage(2, tokens);
+	else
+		kickMsg =_serverClients[targetFd]->getNickname();
+
+	_serverChannels[tokens[1]]->channelMessage(*_serverClients[cfd], RPL_KICK, kickMsg);
+	_serverChannels[tokens[1]]->removeClientCh(targetFd);
+	_serverClients[targetFd]->setChannel("\0");
+	_serverClients[targetFd]->setOp(false);
+}
+
+// void	Server::cmdInvite(const int &cfd, const std::vector<std::string> &tokens) {
+// 	if (tokens.size() != 3) {
+// 		sendMessage(cfd, ERR_NEEDMOREPARAMS, "INVITE");
+// 		return;
+// 	}
+
+// 	// Check if target user exists
+// 	std::map<std::string, int>::iterator it = _ClientsID.find(tokens[1]);
+// 	if (it == _ClientsID.end()) {
+// 		sendMessage(cfd, ERR_NOSUCHNICK, tokens[1]);
+// 		return;
+// 	}
+// 	int targetFd = it->second;
+
+// 	// Check if channel exists
+// 	if (_serverChannels.find(tokens[2]) == _serverChannels.end()) {
+// 		sendMessage(cfd, ERR_NOSUCHCHANNEL, tokens[2]);
+// 		return;
+// 	}
+
+// 	// Check if inviter is on the channel
+// 	if (_serverClients[cfd]->getChannel() != tokens[2]) {
+// 		sendMessage(cfd, ERR_NOTONCHANNEL, tokens[2]);
+// 		return;
+// 	}
+
+// 	// Check if target is already on the channel
+// 	if (_serverClients[targetFd]->getChannel() == tokens[2]) {
+// 		sendMessage(cfd, ERR_USERONCHANNEL, tokens[1]);
+// 		return;
+// 	}
+
+// 	// If channel is invite-only, check if inviter is an operator
+// 	if (_serverChannels[tokens[2]]->getI() && !_serverChannels[tokens[2]]->getOps()[cfd]) {
+// 		sendMessage(cfd, ERR_CHANOPRIVSNEEDED, tokens[2]);
+// 		return;
+// 	}
+
+// 	// Send invite messages
+// 	sendMessage(targetFd, RPL_INVITE, buildInviteMessage(_serverClients[cfd]->getNickname(), tokens[2]));
+// 	sendMessage(cfd, RPL_INVITING, tokens[1] + " " + tokens[2]);
+
+// 	// Add user to invited list
+// 	_serverChannels[tokens[2]]->addInvited(targetFd);
+// }
 
 void	Server::serverInput(void) {
 	int			bytesRead;

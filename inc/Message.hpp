@@ -9,6 +9,7 @@
 #define RPL_NICK				6
 #define RPL_PING				7
 #define RPL_PRIVMSG				8
+#define RPL_KICK				9
 #define RPL_LISTSTART			321
 #define RPL_LIST				322
 #define RPL_CHANNELMODEIS		324
@@ -32,6 +33,7 @@
 #define ERR_USERNOTINCHANNEL	441
 #define ERR_NOTONCHANNEL		442
 #define ERR_USERONCHANNEL		443
+#define ERR_CHANOPRIVSNEEDED	482 // You're not channel operator
 #define ERR_NEEDMOREPARAMS		461
 #define ERR_PASSWDMISMATCH		464
 #define ERR_SERVICESFULL		471

@@ -82,6 +82,15 @@ void	Channel::channelMessage(const Client &client, const int code, const std::st
 			text.append(client.getNickname());
 			text.append(" :Cannot join, channel is full\r\n");
 			break;
+		case RPL_KICK:
+			text = ":";
+			text.append(client.getNickname());
+			text.append(" KICK ");
+			text.append(_name);
+			text.append(" ");
+			text.append(token);
+			text.append("\r\n");
+			break;
 		default:
 			break;
 	}
