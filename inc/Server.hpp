@@ -30,7 +30,6 @@ class Server {
 		void	parseMode(const int &, const std::vector<std::string> &, bool);
 		void	removeClient(int);
 		void	clientInput(int);
-		void	assignOperator(const std::vector<std::string> &);
 		void	cmdParsing(const int &, const std::vector<std::string> &);
 		void	authorization(const int &, const std::vector<std::string> &);;
 		void	sendMessage(const int &, const int, const std::string);

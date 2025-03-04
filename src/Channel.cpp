@@ -179,10 +179,12 @@ void	Channel::setKey(std::string key)
 }
 
 void	Channel::setOp(const int &cfd, const Client *client) {
+	_users.erase(cfd);
 	_ops.insert(std::pair<const int,const Client *>(cfd, client));
 }
 
 void	Channel::removeOp(const int &cfd) {
+	_users.insert(std::pair<const int,const Client *>(cfd, _ops[cfd]));
 	_ops.erase(cfd);
 }
 

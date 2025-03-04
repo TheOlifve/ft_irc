@@ -296,34 +296,6 @@ int	Server::createChannel(const int &cfd, const std::vector<std::string> &tokens
 	return (0);
 }
 
-void	Server::assignOperator(const std::vector<std::string> &tokens) {
-	if (tokens.size() != 3 || tokens[1][0] != '#') {
-		std::cout << "Wrong number of parameters: Usage /OPERATOR '#CHANNEL NAME' 'USER NAME'." << std::endl;
-		return;
-	}
-	if (_serverChannels.find(tokens[1].substr(1)) == _serverChannels.end()) {
-		std::cout << "ERROR: A server doesn't exist." << std::endl;
-		return;
-	}
-	else if (_ClientsID.find(tokens[2]) == _ClientsID.end())
-	{
-		std::cout << "ERROR: A user doesn't exist." << std::endl;
-		return;
-	}
-	if (_serverChannels[tokens[1].substr(1)]->getOps()[_ClientsID[tokens[2]]]) {
-		std::cout << "ERROR: User is already an operator in this channel." << std::endl;
-		return;
-	}
-	if (_serverChannels[tokens[1].substr(1)]->getUsers()[_ClientsID[tokens[2]]] == NULL) {
-		std::cout << "ERROR: User is not in this channel." << std::endl;
-		return;
-	}
-	_serverChannels[tokens[1].substr(1)]->setOp(_ClientsID[tokens[2]], _serverClients[_ClientsID[tokens[2]]]);
-	std::cout << "User " << tokens[2] << " successfully assigned as operator in channel " << tokens[1].substr(1) << "." << std::endl;
-	sendMessage(_ClientsID[tokens[2]], 730, tokens[1].substr(1));
-}
-
-
 std::vector<std::string> split(std::string str) {
 	std::vector<std::string> tokens;
 	size_t start = 0;
@@ -353,6 +325,10 @@ void	Server::cmdJoin(const int &cfd, const std::vector<std::string> &tokens) {
 	if (_serverChannels.find(tokens[1]) == _serverChannels.end())
 		if (createChannel(cfd, tokens))
 			return;
+	if (_serverChannels[tokens[1]]->getI() == true) {
+		sendMessage(cfd, ERR_INVITEONLYCHAN, "JOIN");
+		return;
+	}
 	if (_serverClients[cfd]->getChannel() == tokens[1]) {
 		sendMessage(cfd, ERR_USERONCHANNEL, tokens[1]);
 		return;
@@ -426,7 +402,8 @@ void	Server::parseMode(const int &cfd, const std::vector<std::string> &tokens, b
 			sendMessage(cfd, ERR_NOSUCHNICK, tokens[3]);
 			return ;
 		}
-		else if( _serverChannels[tokens[1]]->getUsers()[_ClientsID[tokens[3]]] == NULL) {
+		else if(_serverChannels[tokens[1]]->getUsers()[_ClientsID[tokens[3]]] == NULL &&
+		_serverChannels[tokens[1]]->getOps()[_ClientsID[tokens[3]]] == NULL) {
 			sendMessage(cfd, ERR_USERNOTINCHANNEL, tokens[3]);
 			return ;
 		}
@@ -454,12 +431,14 @@ void	Server::parseMode(const int &cfd, const std::vector<std::string> &tokens, b
 			_serverChannels[tokens[1]]->setLimit(atoi(tokens[3].c_str()));
 			_serverChannels[tokens[1]]->setL(condition);
 		}
-		else if (tokens.size() != 4) {
+		else if (tokens.size() == 3 && !condition) {
+			_serverChannels[tokens[1]]->setLimit(0);
+			_serverChannels[tokens[1]]->setL(false);
+		}
+		else {
 			sendMessage(cfd, ERR_USERLIMITPARAMS, tokens[1].substr(1));
 			return;
 		}
-		else
-			_serverChannels[tokens[1]]->setLimit(0);
 		if (condition)
 			sendMessage(cfd, RPL_USERLIMITSET, tokens[1].substr(1));
 		else
@@ -472,6 +451,20 @@ void	Server::parseMode(const int &cfd, const std::vector<std::string> &tokens, b
 void	Server::cmdMode(const int &cfd, const std::vector<std::string> &tokens) {
 	bool	condition;
 
+	if (tokens.size() == 2 && _serverChannels.find(tokens[1]) != _serverChannels.end()) {
+			std::string modeStr = "+";
+
+			if (_serverChannels[tokens[1]]->getI())
+				modeStr.append("i");
+			if (_serverChannels[tokens[1]]->getT())
+				modeStr.append("t");
+			if (_serverChannels[tokens[1]]->getK())
+				modeStr.append("k");
+			if (_serverChannels[tokens[1]]->getL())
+				modeStr.append("l");
+			sendMessage(cfd, RPL_CHANNELMODEIS, modeStr);
+		return;
+	}
 	if (tokens.size() > 1 && _serverChannels.find(tokens[1]) != _serverChannels.end()
 		&& _serverChannels[tokens[1]]->getOps()[cfd] == NULL) {
 		sendMessage(cfd, ERR_NOPERMISSION, tokens[1].substr(1));
@@ -512,11 +505,13 @@ void	Server::cmdTopic(const int &cfd, const std::vector<std::string> &tokens) {
 	}
 	if (_serverChannels[tokens[1]]->getT() == false) {
 		_serverChannels[tokens[1]]->setTopic(tokens[2]);
+		_serverChannels[tokens[1]]->setT(true);
 		sendMessage(cfd, RPL_TOPICSET, tokens[2]);
 		_serverChannels[tokens[1]]->channelMessage(*_serverClients[cfd], RPL_USERTOPICSET, tokens[1]);
 	}
 	else if (_serverChannels[tokens[1]]->getT() == true && _serverChannels[tokens[1]]->getOps()[cfd] != NULL) {
 		_serverChannels[tokens[1]]->setTopic(tokens[2]);
+		_serverChannels[tokens[1]]->setT(true);
 		sendMessage(cfd, RPL_TOPICSET, tokens[2]);
 		_serverChannels[tokens[1]]->channelMessage(*_serverClients[cfd], RPL_USERTOPICSET, tokens[1]);
 	}

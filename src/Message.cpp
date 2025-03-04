@@ -329,35 +329,35 @@ void	Server::sendMessage(const int &cfd, const int code, const std::string token
 		case ERR_MODEPARAMS:
 			text = ":ft_irc 745 ";
 			text.append(_serverClients[cfd]->getNickname());
-			text.append(" :ERROR: Wrong number of parameters: Usage /MODE '#channel' '+/-mode' 'parameter'.\r\n");
+			text.append(" :ERROR: Wrong number of parameters: Usage MODE '#channel' '+/-mode' 'parameter'.\r\n");
 			break;
 		case ERR_KEYPARAMS:
 			text = ":ft_irc 746 ";
 			text.append(_serverClients[cfd]->getNickname());
 			text.append(" ");
 			text.append(token);
-			text.append(" :ERROR: Wrong number of parameters: Usage /MODE '#channel' '+/-k' 'key'.\r\n");
+			text.append(" :ERROR: Wrong number of parameters: Usage MODE '#channel' '+/-k' 'key'.\r\n");
 			break;
 		case ERR_OPPARAMS:
 			text = ":ft_irc 747 ";
 			text.append(_serverClients[cfd]->getNickname());
 			text.append(" ");
 			text.append(token);
-			text.append(" :ERROR: Wrong number of parameters: Usage /MODE '#channel' '+/-o' 'username'.\r\n");
+			text.append(" :ERROR: Wrong number of parameters: Usage MODE '#channel' '+/-o' 'username'.\r\n");
 			break;
 		case ERR_USERLIMITPARAMS:
 			text = ":ft_irc 748 ";
 			text.append(_serverClients[cfd]->getNickname());
 			text.append(" ");
 			text.append(token);
-			text.append(" :ERROR: Wrong number of parameters: Usage /MODE '#channel' '+/-l' 'limit'.\r\n");
+			text.append(" :ERROR: Wrong number of parameters: Usage MODE '#channel' '+/-l' 'limit'.\r\n");
 			break;
 		case ERR_TOPICPARAMS:
 			text = ":ft_irc 749 ";
 			text.append(_serverClients[cfd]->getNickname());
 			text.append(" ");
 			text.append(token);
-			text.append(" :ERROR: Wrong number of parameters. Use: /TOPIC '#channel' 'topic'\r\n");
+			text.append(" :ERROR: Wrong number of parameters. Use: TOPIC '#channel' 'topic'\r\n");
 			break;
 		case RPL_TOPICSET:
 			text = ":ft_irc 750 ";
@@ -366,10 +366,24 @@ void	Server::sendMessage(const int &cfd, const int code, const std::string token
 			text.append(token);
 			text.append(" :You have set the channel topic.\r\n");
 			break;
+		case ERR_INVITEONLYCHAN:
+			text = ":ft_irc 473 ";
+			text.append(_serverClients[cfd]->getNickname());
+			text.append(" #private :Cannot join channel (+i)\r\n");
+			break;
 		case ERR_CHANNELISFULL:
 			text = ":ft_irc 752 ";
 			text.append(_serverClients[cfd]->getNickname());
 			text.append(" :Cannot join, channel is full\r\n");
+			break;
+		case RPL_CHANNELMODEIS:
+			text = ":ft_irc 324 ";
+			text.append(_serverClients[cfd]->getNickname());
+			text.append(" ");
+			text.append(_serverClients[cfd]->getChannel());
+			text.append(" ");
+			text.append(token);
+			text.append("\r\n");
 			break;
 		default:
 			break;
