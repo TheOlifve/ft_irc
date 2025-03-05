@@ -385,6 +385,18 @@ void	Server::sendMessage(const int &cfd, const int code, const std::string token
 			text.append(token);
 			text.append("\r\n");
 			break;
+		case RPL_INVITING:
+			text = ":ft_irc 341 ";
+			text.append(_serverClients[cfd]->getNickname());
+			text.append(" ");
+			text.append(token);
+			text.append(" ");
+			text.append(_serverClients[cfd]->getChannel());
+			text.append("\r\n");
+			break;
+		case RPL_INVITE:
+			text = token;
+			break;
 		default:
 			break;
 	}

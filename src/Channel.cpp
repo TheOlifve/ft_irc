@@ -1,7 +1,7 @@
 #include "Channel.hpp"
 
 Channel::Channel(): _name("\0"), _key("\0"), _topic("\0"), _limit(0), _online(0)\
-					, _users(), _ops(), _i(false), _t(false), _k(false), _o(false), _l(false) {}
+					, _users(), _ops(), _i(false), _t(false), _k(false), _o(false), _l(false), _invitelist() {}
 
 Channel::Channel(std::string name, std::string key): _name(name), _key(key), _topic("\0"), _limit(0), _online(0), _users(), _ops(){
 	_i = false;
@@ -9,6 +9,7 @@ Channel::Channel(std::string name, std::string key): _name(name), _key(key), _to
 	_k = false;
 	_o = false;
 	_l = false;
+	_invitelist.insert(std::pair<const int, bool>(0, false));
 }
 
 void	Channel::channelMessage(const Client &client, const int code, const std::string token) {
@@ -252,4 +253,21 @@ std::string	Channel::getTopic(void) const {
 	if (_topic.empty())
 		return "";
 	return _topic;
+}
+
+void	Channel::addInvitelist(const int &cfd) {
+	_invitelist.insert(std::pair<const int, bool>(cfd, true));
+}
+
+void	Channel::removeInvitelist(const int &cfd) {
+	_invitelist.erase(cfd);
+}
+std::map<const int, bool>	Channel::getInvitelist(void) const {
+	return _invitelist;
+}
+
+bool	Channel::invited(const int &cfd) {
+	if (_invitelist.find(cfd) != _invitelist.end())
+		return true;
+	return false;
 }

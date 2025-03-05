@@ -24,7 +24,13 @@ class Channel {
 		void								setLimit(int);
 		void								setOp(const int &, const Client *);
 		void								setTopic(std::string);
+
+		bool								invited(const int &);
+
+		void								addInvitelist(const int &);
+
 		void								removeOp(const int &);
+		void								removeInvitelist(const int &);
 
 		int									getLimit(void) const;
 		int									getOnline(void) const;
@@ -36,6 +42,7 @@ class Channel {
 		std::string							getKey(void) const;
 		std::string							getTopic(void) const;
 		std::string							getName(void) const;
+		std::map<const int, bool>			getInvitelist(void) const;
 		std::map<const int,const Client *>	getOps(void) const;
 		std::map<const int,const Client *>	getUsers(void) const;
 	private:
@@ -51,6 +58,7 @@ class Channel {
 		bool								_k;
 		bool								_o;
 		bool								_l;
+		std::map<const int, bool>					_invitelist;
 };
 
 # endif

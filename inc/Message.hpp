@@ -10,12 +10,14 @@
 #define RPL_PING				7
 #define RPL_PRIVMSG				8
 #define RPL_KICK				9
+#define RPL_INVITE				10
 #define RPL_LISTSTART			321
 #define RPL_LIST				322
 #define RPL_CHANNELMODEIS		324
 #define RPL_LISTEND				323
 #define RPL_TOPIC				332
 #define RPL_NOTOPIC				331
+#define RPL_INVITING			341
 #define RPL_NAMREPLY			353
 #define RPL_ENDOFNAMES			366
 #define RPL_HELPTXT				704
