@@ -493,7 +493,7 @@ void	Server::cmdMode(const int &cfd, const std::vector<std::string> &tokens) {
 }
 
 void	Server::cmdTopic(const int &cfd, const std::vector<std::string> &tokens) {
-	if (tokens.size() != 3 || tokens.size() != 2 || tokens[1][0] != '#') {
+	if ((tokens.size() != 3 && tokens.size() != 2) || tokens[1][0] != '#') {
 		sendMessage(cfd, ERR_TOPICPARAMS, tokens[1]);
 		return;
 	}
