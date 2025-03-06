@@ -497,11 +497,6 @@ void	Server::cmdTopic(const int &cfd, const std::vector<std::string> &tokens) {
 		sendMessage(cfd, ERR_TOPICPARAMS, tokens[1]);
 		return;
 	}
-	if (tokens.size() == 2)
-	{
-		sendMessage(cfd, RPL_TOPIC, _serverChannels[tokens[1]]->getTopic());
-		return;
-	}
 	if (_serverClients[cfd]->getChannel() == "\0" ||
 		_serverClients[cfd]->getChannel().compare(tokens[1])) {
 		sendMessage(cfd, ERR_NOTONCHANNEL, tokens[1]);
@@ -511,17 +506,23 @@ void	Server::cmdTopic(const int &cfd, const std::vector<std::string> &tokens) {
 		sendMessage(cfd, ERR_NOSUCHCHANNEL, tokens[1]);
 		return;
 	}
-	if (_serverChannels[tokens[1]]->getT() == false) {
+	if (tokens.size() == 3 && _serverChannels[tokens[1]]->getT() == false) {
 		_serverChannels[tokens[1]]->setTopic(tokens[2]);
 		_serverChannels[tokens[1]]->setT(true);
 		sendMessage(cfd, RPL_TOPICSET, tokens[2]);
 		_serverChannels[tokens[1]]->channelMessage(*_serverClients[cfd], RPL_USERTOPICSET, tokens[1]);
 	}
-	else if (_serverChannels[tokens[1]]->getT() == true && _serverChannels[tokens[1]]->getOps()[cfd] != NULL) {
+	else if (tokens.size() == 3 && _serverChannels[tokens[1]]->getT() == true
+		&& _serverChannels[tokens[1]]->getOps()[cfd] != NULL) {
 		_serverChannels[tokens[1]]->setTopic(tokens[2]);
 		_serverChannels[tokens[1]]->setT(true);
 		sendMessage(cfd, RPL_TOPICSET, tokens[2]);
 		_serverChannels[tokens[1]]->channelMessage(*_serverClients[cfd], RPL_USERTOPICSET, tokens[1]);
+	}
+	if (tokens.size() == 2)
+	{
+		sendMessage(cfd, RPL_TOPIC, _serverChannels[tokens[1]]->getTopic());
+		return;
 	}
 	else
 		sendMessage(cfd, ERR_NOTOPERATOR, tokens[1]);
